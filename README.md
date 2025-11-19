@@ -131,3 +131,8 @@ Berikut adalah struktur peran pengguna yang bisa diterapkan, dari yang paling da
     * **Manajemen pengguna:** Dapat membuat, mengubah, dan menghapus akun pengguna mana pun, serta mengubah peran mereka (misalnya, mengangkat seorang Anggota menjadi Penulis).
     * Kontrol penuh atas seluruh Django Admin, termasuk modul-modul yang tidak bisa diakses peran lain.
     * Bertanggung jawab atas pemeliharaan dan kesehatan sistem secara keseluruhan.
+
+v. Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang sudah dibuat saat Proyek Tengah Semester
+
+vi. Link Figma :
+    * [Figma](https://www.figma.com/files/team/1554375848835483944/project/461026907/Grassphobic-Team?fuid=1498580805392729561)
