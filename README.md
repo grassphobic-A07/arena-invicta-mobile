@@ -76,15 +76,58 @@ Disclaimer, karena sekarang untuk mobile tinggal bagian integrasi, oleh karena i
     - **Update:** Memperbarui skor dan klasemen/standing.
     - **Delete:** Menghapus data tim atau pertandingan.
 
-## Getting Started
+iv. Peran atau aktor pengguna aplikasi
+Tentu, ini adalah bagian yang sangat penting dalam merancang sebuah aplikasi. Memiliki peran pengguna (user roles) yang jelas akan menentukan keamanan, alur kerja, dan pengalaman pengguna di Arena Invicta.
 
-This project is a starting point for a Flutter application.
+Berikut adalah struktur peran pengguna yang bisa diterapkan, dari yang paling dasar hingga yang paling tinggi:
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### **Peran Pengguna (User Roles) di Arena Invicta**
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+#### 1. **Pengunjung (Visitor)**
+
+* **Deskripsi:**
+    Ini adalah pengguna anonim yang mengakses website tanpa login. Mereka adalah konsumen konten pasif. Tujuannya adalah untuk mendapatkan informasi secara cepat.
+
+* **Hak Akses & Kemampuan:**
+    * Membaca semua artikel berita yang sudah dipublikasikan di modul `news`.
+    * Melihat halaman klasemen dan jadwal pertandingan di modul `leagues`.
+    * Melihat halaman profil publik milik pengguna lain.
+    * **Tidak bisa** menulis komentar, mengikuti kuis, atau memiliki halaman profil sendiri.
+
+#### 2. **Anggota Arena (Registered User)**
+
+* **Deskripsi:**
+    Ini adalah peran standar untuk setiap pengguna yang telah mendaftar dan login. Mereka adalah inti dari komunitas Arena Invicta. Tujuannya adalah untuk berinteraksi dan berpartisipasi aktif.
+
+* **Hak Akses & Kemampuan:**
+    * Memiliki semua hak akses seorang **Pengunjung**.
+    * **Membuat dan mengelola profil** mereka sendiri di modul `profiles` (mengubah bio, foto profil, tim favorit).
+    * **Mengikuti kuis** di modul `quiz` dan mendapatkan skor yang tersimpan di profil mereka.
+    * **Menulis, mengedit, dan menghapus komentar** mereka sendiri di modul `discussions`.
+    * Mendapatkan pengalaman yang lebih personal (misalnya, notifikasi atau rekomendasi di masa depan).
+
+#### 3. **Content Staff (Writer + Editor, digabung)**
+
+* **Deskripsi:**
+    Ini adalah peran untuk tim konten internal kalian. Mereka adalah para "Jurnalis Arena" yang bertugas membuat konten berkualitas dan mempublikasikan artikelnya.
+
+* **Hak Akses & Kemampuan:**
+    * Memiliki semua hak akses seorang **Anggota Arena/Registered User**.
+    * **Membuat dan mempublikasikan (Create)** artikel News.
+    * **Membaca (Read) daftar artikel, detail berita, dan kuis**.
+    * **Mengubah (Update)** artikel berita yang mereka tulis sendiri (selama belum dipublikasikan).
+    * **Membuat dan mengelola** set pertanyaan untuk kuis.
+    * **Menghapus (Delete)** artikel News ataupun set pertanyaan kuis.
+
+#### 4. **Administrator (Superuser)**
+
+* **Deskripsi:**
+    Ini adalah peran tertinggi, biasanya dipegang oleh pemilik produk atau pengembang utama. "Dewa Arena" ini memiliki kontrol penuh atas seluruh aspek teknis dan non-teknis website.
+
+* **Hak Akses & Kemampuan:**
+    * Akses tanpa batas ke seluruh fitur dan data di website.
+    * **Manajemen pengguna:** Dapat membuat, mengubah, dan menghapus akun pengguna mana pun, serta mengubah peran mereka (misalnya, mengangkat seorang Anggota menjadi Penulis).
+    * Kontrol penuh atas seluruh Django Admin, termasuk modul-modul yang tidak bisa diakses peran lain.
+    * Bertanggung jawab atas pemeliharaan dan kesehatan sistem secara keseluruhan.
