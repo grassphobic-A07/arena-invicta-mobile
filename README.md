@@ -134,5 +134,5 @@ Berikut adalah struktur peran pengguna yang bisa diterapkan, dari yang paling da
 
 v. Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang sudah dibuat saat Proyek Tengah Semester
 
-vi. Link Figma :\
-    * [Figma](https://www.figma.com/files/team/1554375848835483944/project/461026907/Grassphobic-Team?fuid=1498580805392729561)
+vi. Link Figma :
+* [Link Figma Desain Arena Invicta](https://www.figma.com/files/team/1554375848835483944/project/461026907/Grassphobic-Team?fuid=1498580805392729561)
