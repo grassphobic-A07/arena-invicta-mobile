@@ -143,6 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                                     
                                     // 1. Ambil data role dari respon Django (Asumsi di views.py Anda mengirim 'role')
                                     // Jika views.py belum mengirim role, dia akan default ke "registered"
+                                    String usernameFromBackend = response['username'];
                                     String roleStr = response['role'] ?? "registered";
 
                                     // 2. Konversi string role dari Django ke Enum UserRole di Flutter
@@ -157,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
 
                                     // 3. Panggil Provider untuk update status login secara global!
                                     // Pake listen: false karena kita hanya memanggil fungsi, tidak me-rebuild widget ini
-                                    Provider.of<UserProvider>(context, listen: false).login(roleEnum);
+                                    Provider.of<UserProvider>(context, listen: false).login(roleEnum, usernameFromBackend);
 
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                       content: Text("Login Berhasil!"),

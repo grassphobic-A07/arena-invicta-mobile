@@ -13,10 +13,12 @@ enum UserRole {
 class UserProvider extends ChangeNotifier {
   UserRole _currentRole = UserRole.visitor;
   bool _isLoggedIn = false; // Status login aktif
+  String _username = "";
 
   // Getters
   UserRole get role => _currentRole;
   bool get isLoggedIn => _isLoggedIn;
+  String get username => _username;
 
   String get roleLabel {
     switch (role) {
@@ -32,9 +34,10 @@ class UserProvider extends ChangeNotifier {
   }
 
   // Fungsi untuk Login (dipanggil dari login.dart nanti)
-  void login(UserRole newRole) {
+  void login(UserRole newRole, String username) {
     _isLoggedIn = true;
     _currentRole = newRole;
+    _username = username;
     notifyListeners(); // <--- PENTING: Memberitahu widget lain untuk rebuild
   }
 
@@ -157,30 +160,32 @@ class _MyHomePageState extends State<MyHomePage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.deepPurple,
+              decoration: BoxDecoration(
+                color: ThemeData.dark().primaryColorDark,
               ),
               child: Column(
                 children: [
-                  const Text(
-                    'Menu',
+                  Text(
+                    'Hi! ${userProvider.username[0].toUpperCase()}${userProvider.username.substring(1)}',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
+                      fontWeight: FontWeight.bold
                     ),
                   ),
 
                   const SizedBox(height: 8,),
                   Text(
                     'Status: ${userProvider.isLoggedIn ? "Online" : "Offline"}',
-                    style: const TextStyle(color: Colors.white70),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
 
                   Text(
                     'Role: $roleText',
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 16,
+                      fontSize: 12,
                     ),
                   ),
                 ],
