@@ -211,19 +211,28 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Text('Role aktif: $roleText'),
             const SizedBox(height: 12,),
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            if (!userProvider.isLoggedIn) ...[
+              const Text(
+                'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
+                style: TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ] else ...[
+              const Text('You have pushed the button this many times:'),
+              Text(
+                '$_counter',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ]
+            
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: userProvider.isLoggedIn ? FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ),
+      ) : null,
     );
   }
 }
