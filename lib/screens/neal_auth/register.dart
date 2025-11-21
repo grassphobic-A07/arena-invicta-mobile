@@ -180,23 +180,23 @@ class _RegisterPageState extends State<RegisterPage> {
                               if (_formKey.currentState!.validate()) {
                                 // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
                                 final response = await request.post(
-                                    "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/register/",
+                                    "http://10.0.2.2:8000/accounts/api/register/",
                                     {
                                       'username': _usernameController.text,
                                       'password': _passwordController.text,
-                                      'role': _selectedRole,
+                                      'confirmPassword': _confirmPasswordController.text,
+                                      'role': _selectedRole == 'Content Staff (Writer & Editor)' ? 'content_staff' : 'registered',
                                     });
 
                                 if (context.mounted) {
                                   if (response['status']) {
+
+                                    // 1. Ambil data
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                       content: Text("Welcome to the Arena!"),
                                       backgroundColor: Colors.green,
                                     ));
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const LoginPage()),
-                                    );
+                                    Navigator.pushNamed(context, LoginPage.routeName);
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                       content: Text(response['message'] ?? "Registration Failed"),
