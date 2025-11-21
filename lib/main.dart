@@ -1,5 +1,49 @@
+import 'package:arena_invicta_mobile/screens/neal_auth/login.dart';
 import 'package:arena_invicta_mobile/screens/neal_auth/register.dart';
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+
+
+// Simple enum & session helper
+enum UserRole {
+  visitor, registered, staff, admin
+}
+
+class UserProvider extends ChangeNotifier {
+  UserRole _currentRole = UserRole.visitor;
+  bool _isLoggedIn = false; // Status login aktif
+
+  // Getters
+  UserRole get role => _currentRole;
+  bool get isLoggedIn => _isLoggedIn;
+
+  String get roleLabel {
+    switch (role) {
+      case UserRole.registered:
+        return "Registered User";
+      case UserRole.staff:
+        return "Content Staff";
+      case UserRole.admin:
+        return "Administrator";
+      default:
+        return "Visitor";
+    }
+  }
+
+  // Fungsi untuk Login (dipanggil dari login.dart nanti)
+  void login(UserRole newRole) {
+    _isLoggedIn = true;
+    _currentRole = newRole;
+    notifyListeners(); // <--- PENTING: Memberitahu widget lain untuk rebuild
+  }
+
+  void logout() {
+    _isLoggedIn = false;
+    _currentRole = UserRole.visitor;
+    notifyListeners(); // Memberitahu widget lain untuk rebuild
+  }
+}
 
 void main() {
   runApp(const MyApp());
@@ -9,24 +53,37 @@ void main() {
 // ========== File Utama Arena Invicta ==========
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+  static const String routeName = '/home';
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Arena Invicta',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        Provider<CookieRequest>(create: (_) => CookieRequest(),),
+
+        ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider())
+      ],
+      child: MaterialApp(
+        title: 'Arena Invicta',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+
+        // Route Management dan Route Utama
+        initialRoute: MyApp.routeName,
+        routes: {
+          MyApp.routeName: (context) => MyHomePage(),
+          LoginPage.routeName: (context) => const LoginPage(),
+          RegisterPage.routeName: (context) => const RegisterPage(),
+        },
       ),
-      home: const MyHomePage(title: 'Arena Invicta'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -48,27 +105,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = context.watch<UserProvider>();
+    final roleText = userProvider.roleLabel;
+
     return Scaffold(
       // App Bar
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: const Text("Arena Invicta"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.login),
-            onPressed: () {
-              // Aksi ketika tombol login ditekan
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.app_registration),
-            onPressed: () {
-              MaterialPageRoute route = MaterialPageRoute(
-                builder: (context) => const RegisterPage(),
-              );
-              Navigator.push(context, route);
-            },
-          ),
+          if (!userProvider.isLoggedIn) ...[
+            IconButton(
+              icon: const Icon(Icons.login),
+              onPressed: () {
+                Navigator.pushNamed(context, LoginPage.routeName);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.app_registration),
+              onPressed: () {
+                Navigator.pushNamed(context, RegisterPage.routeName);
+              },
+            ),
+          ] else ...[
+            IconButton(              
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                // Panggil fungsi logout di provider
+                // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
+                context.read<UserProvider>().logout();
+
+                // Opsional: panggil endpoint logout di Django juga diperlukan
+                // final request = context.read<CookieRequest>();
+                // await request.logout("http://.../accounts/logout/");
+
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Berhasil Logout!"),
+                  ),
+                );
+
+              }, 
+            ),
+          ],
+          
         ],
       ),
 
@@ -77,32 +156,52 @@ class _MyHomePageState extends State<MyHomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.deepPurple,
               ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8,),
+                  Text(
+                    'Status: ${userProvider.isLoggedIn ? "Online" : "Offline"}',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+
+                  Text(
+                    'Role: $roleText',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
               onTap: () {
-                // Aksi ketika menu Home ditekan
+                Navigator.pushNamed(context, MyApp.routeName);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                // Aksi ketika menu Settings ditekan
-              },
-            ),
+
+            if (userProvider.isLoggedIn)
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('Settings'),
+                onTap: () {
+                  // Aksi ketika menu Settings ditekan
+                },
+              ),
           ],
         ),
       ),
@@ -110,6 +209,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text('Role aktif: $roleText'),
+            const SizedBox(height: 12,),
             const Text('You have pushed the button this many times:'),
             Text(
               '$_counter',

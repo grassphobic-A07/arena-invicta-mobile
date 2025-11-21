@@ -1,9 +1,12 @@
 import 'package:arena_invicta_mobile/screens/neal_auth/login.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  static const String routeName = '/register';
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -35,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    // final request = context.watch<CookieRequest>();
+    final request = context.watch<CookieRequest>();
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -45,20 +48,9 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Judul halaman
-              const Text(
-                'Register',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F5F7A),
-                ),
-              ),
-
-              const SizedBox(height: 30.0),
 
               // Card Form Register
-              // 2. Card Form yang lebih Modern
+              // 1. Card Form yang lebih Modern
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -76,15 +68,25 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: [                        
+                        const Text(
+                          'Register',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F5F7A),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30.0),
+
                         // --- Username ---
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
                           decoration: _inputDecoration(
                             "Choose a unique username",
-                            Icons.person_outline,
                           ),
                           validator: (value) => value!.isEmpty ? "Username required" : null,
                         ),
@@ -97,7 +99,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           obscureText: _obscurePassword,
                           decoration: _inputDecoration(
                             "At least 8 characters",
-                            Icons.lock_outline,
                           ).copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -122,7 +123,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           obscureText: _obscureConfirmPassword,
                           decoration: _inputDecoration(
                             "Re-enter your password",
-                            Icons.lock_clock_outlined, // Ikon beda dikit
                           ).copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -144,7 +144,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         DropdownButtonFormField<String>(
                           decoration: _inputDecoration(
                             "Select your role",
-                            Icons.badge_outlined, // Ikon ID Card
                           ),
                           value: _selectedRole,
                           items: _roleOptions.map((String role) {
@@ -178,37 +177,37 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ),
                             onPressed: () async {
-                              // if (_formKey.currentState!.validate()) {
-                              //   // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
-                              //   final response = await request.post(
-                              //       "http://127.0.0.1:8000/auth/register/",
-                              //       {
-                              //         'username': _usernameController.text,
-                              //         'password': _passwordController.text,
-                              //         'role': _selectedRole,
-                              //       });
+                              if (_formKey.currentState!.validate()) {
+                                // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
+                                final response = await request.post(
+                                    "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/register/",
+                                    {
+                                      'username': _usernameController.text,
+                                      'password': _passwordController.text,
+                                      'role': _selectedRole,
+                                    });
 
-                              //   if (context.mounted) {
-                              //     if (response['status']) {
-                              //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              //         content: Text("Welcome to the Arena!"),
-                              //         backgroundColor: Colors.green,
-                              //       ));
-                              //       Navigator.pushReplacement(
-                              //         context,
-                              //         MaterialPageRoute(builder: (context) => const LoginPage()),
-                              //       );
-                              //     } else {
-                              //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              //         content: Text(response['message'] ?? "Registration Failed"),
-                              //         backgroundColor: Colors.red,
-                              //       ));
-                              //     }
-                              //   }
-                              // }
+                                if (context.mounted) {
+                                  if (response['status']) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                      content: Text("Welcome to the Arena!"),
+                                      backgroundColor: Colors.green,
+                                    ));
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text(response['message'] ?? "Registration Failed"),
+                                      backgroundColor: Colors.red,
+                                    ));
+                                  }
+                                }
+                              }
                             },
                             child: const Text(
-                              "CREATE ACCOUNT",
+                              "Create Account",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -222,8 +221,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 24),
 
               const SizedBox(height: 20),
 
@@ -259,18 +256,22 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-          color: Colors.black
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          textAlign: TextAlign.start,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.black
+          ),
         ),
       ),
     );
   }
 
-  InputDecoration _inputDecoration(String hint, IconData icon) {
+  InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(
@@ -278,7 +279,6 @@ class _RegisterPageState extends State<RegisterPage> {
         fontSize: 14,
       ),
       // ignore: deprecated_member_use
-      prefixIcon: Icon(icon, color: primaryColor.withOpacity(0.7)),
       filled: true,
       fillColor: Colors.grey[50], // Isi field agak abu sangat muda
       contentPadding: const EdgeInsets.symmetric(

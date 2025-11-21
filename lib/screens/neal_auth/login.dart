@@ -1,10 +1,281 @@
+import 'package:arena_invicta_mobile/main.dart';
+import 'package:arena_invicta_mobile/screens/neal_auth/register.dart';
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  // Inisiasi route name untuk navigasi
+  static const String routeName = '/login';
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  // Controllers untuk input text
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();  
+
+  // Variabel State
+  bool _obscurePassword = true;
+
+  // Palet warna
+  final Color primaryColor = const Color(0xFF1F5F7A); // Dark Teal
+  final Color accentColor = const Color(0xFFD4AF37);  // Gold (Invicta)
+  final Color backgroundColor = const Color(0xFFF0F4F8); // Soft Blue-Grey
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    final request = context.watch<CookieRequest>();
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    )
+                  ]
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(30.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Login',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F5F7A),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30.0),
+
+                        // ----- Username Field -----
+                        _buildLabel("Username"),
+                        TextFormField(
+                          controller: _usernameController,
+                          decoration: _inputDecoration("Your Username"),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Username tidak boleh kosong";
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 20,),
+
+                        _buildLabel("Password"),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: _inputDecoration("Enter your password").copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Password tidak boleh kosong";
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // --- Tombol Login ---
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                              elevation: 5,
+                              shadowColor: primaryColor.withOpacity(0.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                // TODO: Ganti URL dengan URL endpoint Django kamu yang asli
+                                // Contoh: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/auth/login/"
+                                final response = await request.login(
+                                    "http://10.0.2.2:8000/accounts/api/login/",
+                                    {
+                                      'username': _usernameController.text,
+                                      'password': _passwordController.text,
+                                    });
+
+                                if (context.mounted) {
+                                  if (response['status']) {
+                                    
+                                    // 1. Ambil data role dari respon Django (Asumsi di views.py Anda mengirim 'role')
+                                    // Jika views.py belum mengirim role, dia akan default ke "registered"
+                                    String roleStr = response['role'] ?? "registered";
+
+                                    // 2. Konversi string role dari Django ke Enum UserRole di Flutter
+                                    UserRole roleEnum = UserRole.visitor;
+                                    if (roleStr == "content_staff") {
+                                      roleEnum = UserRole.staff;
+                                    } else if(roleStr == "admin" || roleStr == "superuser") {
+                                      roleEnum = UserRole.admin;
+                                    } else {
+                                      roleEnum = UserRole.registered;
+                                    }
+
+                                    // 3. Panggil Provider untuk update status login secara global!
+                                    // Pake listen: false karena kita hanya memanggil fungsi, tidak me-rebuild widget ini
+                                    Provider.of<UserProvider>(context, listen: false).login(roleEnum);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                      content: Text("Login Berhasil!"),
+                                      backgroundColor: Colors.green,
+                                    ));
+                                    
+                                    // 4. Kembali ke Halaman Utama
+                                    // Gunakan pushReplacementNamed agar lebih rapi
+                                    Navigator.pushReplacementNamed(
+                                      context,
+                                      MyApp.routeName,
+                                    );
+
+                                    // TODO: Jika ada UserProvider, update state user di sini
+                                    // final userProvider = context.read<UserProvider>();
+                                    // userProvider.setUser(response['user_data']); // Sesuaikan dengan format response Django
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text(response['message'] ?? "Login Gagal"),
+                                      backgroundColor: Colors.red,
+                                    ));
+                                  }
+                                }
+                              }
+                            },
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                      ],
+                    ) 
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // --- Footer: Already have an account? ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don't have an account? "),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RegisterPage()),
+                      );
+                    },
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper Widget untuk Label di atas Input Field (Sama seperti RegisterPage)
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          textAlign: TextAlign.start,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper Decoration agar tampilan input konsisten (Sama seperti RegisterPage)
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        color: Colors.grey[400],
+        fontSize: 14,
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.0),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.0),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.0),
+        borderSide: const BorderSide(color: Color(0xFF1F5F7A), width: 2),
+      ),
+    );
   }
 }
