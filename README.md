@@ -140,7 +140,7 @@ Secara garis besar, integrasi Arena Invicta Mobile dengan web service Arena Invi
    Di sisi Flutter, ditambahkan dependency provider dan pbp_django_auth, lalu main.dart dimodifikasi agar membungkus MaterialApp dengan Provider<CookieRequest>. Dari sana, dibuat halaman Login dan Register yang memanggil endpoint /auth/login/ dan /auth/register/ dengan request.login(...) dan request.postJson(...). Paket pbp_django_auth menyimpan cookie session Django di dalam CookieRequest, sehingga status login pengguna akan otomatis ikut di semua request berikutnya.
 3. **Pengambilan & pengiriman data untuk tiap modul**\
    Aplikasi Flutter menambahkan dependency http dan model-model Dart yang disesuaikan dengan struktur JSON dari web service. Untuk setiap modul, dibuat fungsi asinkron (misalnya fetchNews(), fetchQuizzes(), fetchDiscussions(), fetchLeagues(), dll.) yang melakukan GET/POST ke endpoint Django, mengonversi respons JSON menjadi objek model Dart, lalu menampilkan hasilnya menggunakan widget seperti FutureBuilder atau state management sederhana.
-4. **Menghubungkan modul mobile ke modul Django yang bersesuaian**\
+4. **Menghubungkan modul mobile ke modul Django yang bersesuaian**
    - Accounts & Profiles menggunakan endpoint autentikasi (login, register) serta endpoint profil pengguna untuk menampilkan dan mengubah data user yang sedang login.
    - News terhubung ke endpoint daftar & detail berita yang sudah ada di website PTS.
    - Quiz terhubung ke endpoint soal, jawaban, dan skor/leaderboard.
