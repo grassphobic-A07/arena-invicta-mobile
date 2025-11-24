@@ -1,4 +1,4 @@
-import 'package:arena_invicta_mobile/screens/neal_auth/login.dart';
+import 'package:arena_invicta_mobile/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
