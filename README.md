@@ -134,19 +134,19 @@ Berikut adalah struktur peran pengguna yang bisa diterapkan, dari yang paling da
 
 v. Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang sudah dibuat saat Proyek Tengah Semester\
 Secara garis besar, integrasi Arena Invicta Mobile dengan web service Arena Invicta (Django, Proyek Tengah Semester) dilakukan melalui tahapan berikut (nomor ini dapat berubah sewaktu-waktu):
-**1. Menyiapkan web service pada proyek Django PTS**\
+**1. Menyiapkan web service pada proyek Django PTS**
    Menambahkan app authentication, mengaktifkan django-cors-headers, serta mengatur cookie/CSRF dan ALLOWED_HOSTS agar situs PTS dapat menerima request dari aplikasi Flutter dan emulator Android. Selain itu, setiap modul (Accounts & Profiles, News, Quiz, Discussions, Leagues) diberi endpoint JSON (list, detail, dan operasi CRUD) yang mengembalikan data dalam format JsonResponse untuk dikonsumsi mobile.
-**2. Integrasi autentikasi Django–Flutter dengan pbp_django_auth**\
+**2. Integrasi autentikasi Django–Flutter dengan pbp_django_auth**
    Di sisi Flutter, ditambahkan dependency provider dan pbp_django_auth, lalu main.dart dimodifikasi agar membungkus MaterialApp dengan Provider<CookieRequest>. Dari sana, dibuat halaman Login dan Register yang memanggil endpoint /auth/login/ dan /auth/register/ dengan request.login(...) dan request.postJson(...). Paket pbp_django_auth menyimpan cookie session Django di dalam CookieRequest, sehingga status login pengguna akan otomatis ikut di semua request berikutnya.
-**3. Pengambilan & pengiriman data untuk tiap modul**\
+**3. Pengambilan & pengiriman data untuk tiap modul**
    Aplikasi Flutter menambahkan dependency http dan model-model Dart yang disesuaikan dengan struktur JSON dari web service. Untuk setiap modul, dibuat fungsi asinkron (misalnya fetchNews(), fetchQuizzes(), fetchDiscussions(), fetchLeagues(), dll.) yang melakukan GET/POST ke endpoint Django, mengonversi respons JSON menjadi objek model Dart, lalu menampilkan hasilnya menggunakan widget seperti FutureBuilder atau state management sederhana.
-**4. Menghubungkan modul mobile ke modul Django yang bersesuaian**\
+**4. Menghubungkan modul mobile ke modul Django yang bersesuaian**
    - Accounts & Profiles menggunakan endpoint autentikasi (login, register) serta endpoint profil pengguna untuk menampilkan dan mengubah data user yang sedang login.
    - News terhubung ke endpoint daftar & detail berita yang sudah ada di website PTS.
    - Quiz terhubung ke endpoint soal, jawaban, dan skor/leaderboard.
    - Discussions terhubung ke endpoint thread dan komentar.
    - Leagues terhubung ke endpoint liga, klub, jadwal, dan hasil pertandingan. Seluruh request yang membutuhkan otentikasi dikirim melalui CookieRequest sehingga hanya pengguna yang sudah login yang dapat mengakses fitur-fitur tertentu tersebut.
-**5. Penyelarasan environment dan otomatisasi build**\
+**5. Penyelarasan environment dan otomatisasi build**
    Untuk pengembangan lokal, aplikasi Flutter diarahkan ke server Django dengan base URL http://10.0.2.2:8000/, sedangkan untuk build rilis base URL diganti ke deployment PBP https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/. Setelah integrasi berfungsi stabil, repository Flutter dihubungkan dengan GitHub Actions dan Bitrise untuk mengotomatisasi proses build dan distribusi APK setiap ada perubahan pada branch utama, mengikuti panduan CI/CD pada Tutorial 9.
 
 vi. Link Figma :
