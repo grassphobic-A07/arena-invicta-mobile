@@ -1,7 +1,8 @@
-import 'package:arena_invicta_mobile/screens/login.dart';
-import 'package:arena_invicta_mobile/screens/register.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -46,6 +47,16 @@ class UserProvider extends ChangeNotifier {
   }
 }
 
+// ========== Warna Tema Arena Invicta ==========
+class ArenaColor {
+  static const Color darkAmethyst = Color(0xFF1A103C);
+  static const Color darkAmethystLight = Color(0xFF2A1B54);
+  static const Color purpleX11 = Color(0xFF9333EA);     // Warna Utama (Primary)
+  static const Color dragonFruit = Color(0xFFEC4899);   // Warna Aksen (Secondary)
+  static const Color evergreen = Color(0xFF062726);
+}
+
+
 void main() {
   runApp(const MyApp());
 }
@@ -66,8 +77,43 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Arena Invicta',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.dark(
+            primary: ArenaColor.purpleX11,
+            secondary: ArenaColor.dragonFruit,
+            surface: ArenaColor.darkAmethyst,
+            onSurface: Colors.white,
+            background: ArenaColor.evergreen,
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: ArenaColor.darkAmethystLight,
+            foregroundColor: Colors.white,
+          ),
+          textTheme: GoogleFonts.poppinsTextTheme(
+            Theme.of(context).textTheme,
+          ).copyWith(
+            displayLarge: GoogleFonts.orbitron(
+              textStyle: Theme.of(context).textTheme.displayLarge,
+              color: Colors.white,
+            ),
+            displayMedium: GoogleFonts.orbitron(
+              textStyle: Theme.of(context).textTheme.displayMedium,
+              color: Colors.white,
+            ),
+            headlineLarge: GoogleFonts.orbitron(
+              textStyle: Theme.of(context).textTheme.headlineLarge,
+              color: Colors.white,
+            ),
+            headlineMedium: GoogleFonts.orbitron(
+              textStyle: Theme.of(context).textTheme.headlineMedium,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            bodyLarge: GoogleFonts.poppins(color: Colors.white),
+            bodyMedium: GoogleFonts.poppins(color: Colors.white70),
+          ),
         ),
 
         // Route Management dan Route Utama
@@ -98,7 +144,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       // App Bar
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: AppBarTheme.of(context).backgroundColor,
+        foregroundColor: AppBarTheme.of(context).foregroundColor,
         title: const Text("Arena Invicta"),
         actions: [
           if (!userProvider.isLoggedIn) ...[

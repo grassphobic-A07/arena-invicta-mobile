@@ -1,5 +1,5 @@
 import 'package:arena_invicta_mobile/main.dart';
-import 'package:arena_invicta_mobile/screens/register.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';

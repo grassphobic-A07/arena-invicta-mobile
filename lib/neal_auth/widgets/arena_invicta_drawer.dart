@@ -24,7 +24,8 @@ class ArenaInvictaDrawer extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Hi! ${userProvider.username[0].toUpperCase()}${userProvider.username.substring(1)}',
+                  (userProvider.isLoggedIn && userProvider.username.isNotEmpty) ?
+                  'Hi! ${userProvider.username[0].toUpperCase()}${userProvider.username.substring(1)}' : 'Hi! Visitor',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
