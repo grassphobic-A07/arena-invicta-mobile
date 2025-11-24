@@ -133,7 +133,7 @@ Berikut adalah struktur peran pengguna yang bisa diterapkan, dari yang paling da
     * Bertanggung jawab atas pemeliharaan dan kesehatan sistem secara keseluruhan.
 
 v. Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang sudah dibuat saat Proyek Tengah Semester\
-Secara garis besar, integrasi Arena Invicta Mobile dengan web service Arena Invicta (Django, Proyek Tengah Semester) dilakukan melalui tahapan berikut (nomor ini dapat berubah sewaktu-waktu):
+Secara garis besar, integrasi Arena Invicta Mobile dengan web service Arena Invicta (Django, Proyek Tengah Semester) dilakukan melalui tahapan berikut **(nomor ini dapat berubah sewaktu-waktu)**:
 1. **Menyiapkan web service pada proyek Django PTS**\
    Menambahkan app authentication, mengaktifkan django-cors-headers, serta mengatur cookie/CSRF dan ALLOWED_HOSTS agar situs PTS dapat menerima request dari aplikasi Flutter dan emulator Android. Selain itu, setiap modul (Accounts & Profiles, News, Quiz, Discussions, Leagues) diberi endpoint JSON (list, detail, dan operasi CRUD) yang mengembalikan data dalam format JsonResponse untuk dikonsumsi mobile.
 2. **Integrasi autentikasi Django–Flutter dengan pbp_django_auth**\
