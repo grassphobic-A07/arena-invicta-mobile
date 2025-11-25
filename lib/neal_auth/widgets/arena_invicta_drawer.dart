@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/admin_dashboard.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
@@ -28,7 +31,7 @@ class ArenaInvictaDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
-            
+            margin: EdgeInsets.zero,
             decoration: ArenaColor.mainBackgroundGradient,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,16 +40,20 @@ class ArenaInvictaDrawer extends StatelessWidget {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.white.withOpacity(0.2),
-                  child: Text (
-                    (userProvider.isLoggedIn && userProvider.username.isNotEmpty) ? userProvider.username[0].toUpperCase() : 'V',
-                  ),
+                  backgroundImage: (userProvider.isLoggedIn && userProvider.avatarUrl != null && userProvider.avatarUrl!.isNotEmpty) ? NetworkImage(userProvider.avatarUrl!) : null,
+                  child: (userProvider.isLoggedIn && (userProvider.avatarUrl == null || userProvider.avatarUrl!.isEmpty))
+                      ? Text (
+                          userProvider.username.isNotEmpty ? userProvider.username[0].toUpperCase() : '?',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: ArenaColor.darkAmethyst),
+                        )
+                      : (!userProvider.isLoggedIn ? const Text('V') : null),
                 ),
 
                 const SizedBox(height: 12),
 
                 Text(
                   (userProvider.isLoggedIn && userProvider.username.isNotEmpty) ?
-                  'Hi! ${userProvider.username[0].toUpperCase()}${userProvider.username.substring(1)}' : 'Hi! Visitor',
+                  'Hi! ${userProvider.username}' : 'Hi! Visitor',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
@@ -82,8 +89,22 @@ class ArenaInvictaDrawer extends StatelessWidget {
               child: Divider(color: Colors.white.withOpacity(0.1)),
             ),
 
+            // --- MENU KHUSUS ADMIN ---
+            if (userProvider.role == UserRole.admin) 
+              ListTile(
+                leading: const Icon(Icons.admin_panel_settings_rounded, color: ArenaColor.purpleX11), // Icon Ungu Terang
+                title: const Text('Admin Dashboard', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AdminDashboardPage()),
+                  );
+                },
+              ),
+              
             ListTile(
-              leading: const Icon(Icons.account_circle, color: Colors.white),
+              leading: const Icon(Icons.account_circle, color: ArenaColor.purpleX11),
               title: const Text('My Profile', style: TextStyle(color: Colors.white)),
               onTap: () {
                 // 1. Tutup Drawer dulu

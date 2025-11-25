@@ -24,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // Variabel State
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -163,83 +164,114 @@ class _LoginPageState extends State<LoginPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () async {
+                            onPressed: _isLoading ? null : () async {
                               if (_formKey.currentState!.validate()) {
+
+                                setState(() {
+                                  _isLoading = true;
+                                });
 
                                 // TODO: Ganti URL dengan URL endpoint Django kamu yang asli
                                 // Contoh: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/auth/login/"
-                                final response = await request.login(
-                                  "http://10.0.2.2:8000/accounts/api/login/",
-                                  {
-                                    'username': _usernameController.text,
-                                    'password': _passwordController.text,
-                                  },
-                                );
+                                try {
+                                  final response = await request.login(
+                                    "http://10.0.2.2:8000/accounts/api/login/",
+                                    {
+                                      'username': _usernameController.text,
+                                      'password': _passwordController.text,
+                                    },
+                                  );
+                                  
+                                  if (context.mounted) {
+                                    if (response['status']) {
+                                      // 1. Ambil data role dari respon Django (Asumsi di views.py Anda mengirim 'role')
+                                      // Jika views.py belum mengirim role, dia akan default ke "registered"
+                                      String usernameFromBackend = response['username'];
+                                      String roleStr = response['role'];
+                                      String avatarUrl = response['avatar_url'] ?? "";
 
-                                if (context.mounted) {
-                                  if (response['status']) {
-                                    // 1. Ambil data role dari respon Django (Asumsi di views.py Anda mengirim 'role')
-                                    // Jika views.py belum mengirim role, dia akan default ke "registered"
-                                    String usernameFromBackend =
-                                        response['username'];
-                                    String roleStr =
-                                        response['role'] ?? "registered";
+                                      // 2. Konversi string role dari Django ke Enum UserRole di Flutter
+                                      UserRole roleEnum;
 
-                                    // 2. Konversi string role dari Django ke Enum UserRole di Flutter
-                                    UserRole roleEnum = UserRole.visitor;
-                                    if (roleStr == "content_staff") {
-                                      roleEnum = UserRole.staff;
-                                    } else if (roleStr == "admin" ||
-                                        roleStr == "superuser") {
-                                      roleEnum = UserRole.admin;
-                                    } else {
-                                      roleEnum = UserRole.registered;
-                                    }
+                                      if (roleStr == "admin") {
+                                        roleEnum = UserRole.admin;
+                                      } else if (roleStr == "content_staff") {
+                                        roleEnum = UserRole.staff;
+                                      } else {
+                                        roleEnum = UserRole.registered;
+                                      }
 
-                                    // 3. Panggil Provider untuk update status login secara global!
-                                    // Pake listen: false karena kita hanya memanggil fungsi, tidak me-rebuild widget ini
-                                    Provider.of<UserProvider>(
-                                      context,
-                                      listen: false,
-                                    ).login(roleEnum, usernameFromBackend);
+                                      // 3. Panggil Provider untuk update status login secara global!
+                                      // Pake listen: false karena kita hanya memanggil fungsi, tidak me-rebuild widget ini
+                                      Provider.of<UserProvider>(
+                                        context,
+                                        listen: false,
+                                      ).login(roleEnum, usernameFromBackend, avatarUrl: avatarUrl);
 
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Login Berhasil!"),
-                                        backgroundColor: Colors.greenAccent,
-                                      ),
-                                    );
-
-                                    // 4. Kembali ke Halaman Utama
-                                    // Gunakan pushReplacementNamed agar lebih rapi
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      MyApp.routeName,
-                                    );
-
-                                    // TODO: Jika ada UserProvider, update state user di sini
-                                    // final userProvider = context.read<UserProvider>();
-                                    // userProvider.setUser(response['user_data']); // Sesuaikan dengan format response Django
-                                  } else {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          response['message'] ??
-                                              "Login Gagal",
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("Login Berhasil!"),
+                                          backgroundColor: Colors.greenAccent,
                                         ),
-                                        backgroundColor: Colors.redAccent,
-                                      ),
+                                      );
+
+                                      // 4. Kembali ke Halaman Utama
+                                      // Gunakan pushReplacementNamed agar lebih rapi
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        MyApp.routeName,
+                                      );
+
+                                      // TODO: Jika ada UserProvider, update state user di sini
+                                      // final userProvider = context.read<UserProvider>();
+                                      // userProvider.setUser(response['user_data']); // Sesuaikan dengan format response Django
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            response['message'] ??
+                                                "Login Gagal",
+                                          ),
+                                          backgroundColor: Colors.redAccent,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  // Handle Error Koneksi dsb
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text("Error: $e"))
                                     );
+                                  } 
+                                } finally {
+                                  // 3. Set Loading FALSE (Berhenti Putar)
+                                  // Blok 'finally' akan selalu dijalankan baik sukses maupun error
+                                  if (mounted) {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
                                   }
                                 }
                                 
+                                
                               }
                             },
-                            child: const Text(
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : 
+                              const Text(
                               "LOGIN",
                               style: TextStyle(
                                 fontSize: 16,

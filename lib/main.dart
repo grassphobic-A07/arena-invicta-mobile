@@ -39,9 +39,9 @@ class UserProvider extends ChangeNotifier {
   // Fungsi untuk Login (dipanggil dari login.dart nanti)
   void login(UserRole newRole, String username, {String? avatarUrl}) {
     _isLoggedIn = true;
-    _currentRole = newRole;
-    _avatarUrl = avatarUrl;
+    _currentRole = newRole;    
     _username = username;
+    _avatarUrl = avatarUrl;
     notifyListeners(); // <--- PENTING: Memberitahu widget lain untuk rebuild
   }
 

@@ -119,9 +119,112 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> deleteAccount() async {
+    // 1. Tampilkan Dialog Konfirmasi
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: ArenaColor.darkAmethystLight,
+        title: const Text("Hapus Akun?", style: TextStyle(color: Colors.white)),
+        content: const Text(
+          "Aksi ini tidak dapat dibatalkan. Semua data Anda akan hilang.",
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    // Jika user tekan Batal atau tutup dialog
+    if (confirm != true) return;
+
     final request = context.read<CookieRequest>();
-    // Implementasi delete account hit ke endpoint delete
-    // Lalu logout dan redirect ke login
+    
+    try {
+      // 2. Panggil API Delete
+      final response = await request.post(
+        "http://10.0.2.2:8000/accounts/api/profile/delete/",
+        {}, // Body kosong
+      );
+
+      if (response['status'] == true) {
+        if (!mounted) return;
+
+        // 3. Bersihkan State Lokal
+        context.read<UserProvider>().logout();
+
+        // 4. Tampilkan Pesan Sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Akun berhasil dihapus."),
+            backgroundColor: Colors.greenAccent,
+          ),
+        );
+
+        // 5. Pindah ke Login & Hapus semua history navigasi
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          MyApp.routeName,
+          (route) => false,
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? "Gagal menghapus akun."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  Future<void> performDelete() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.post("http://10.0.2.2:8000/accounts/api/profile/delete/", {});
+
+      if (response['status']) {
+        if (!mounted) return; 
+
+        context.read<UserProvider>().logout();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message']),
+            backgroundColor: Colors.redAccent,
+          )
+        );
+
+        Navigator.pushNamedAndRemoveUntil(
+          context, 
+          MyApp.routeName, 
+          (route) => false,
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? "Gagal menghapus akun.")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
   }
 
   @override
@@ -302,7 +405,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
-                    const SizedBox(height: 20),
 
                     _buildTextField(
                       label: "Bio",
@@ -312,7 +414,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       enabled: _isEditing,
                     ),
 
-                    const SizedBox(height: 30),
 
                     if (_isEditing)
                       SizedBox(
@@ -348,6 +449,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: const Text("Delete Account"),
                           onPressed: () {
                             // Tampilkan dialog konfirmasi delete account
+                            deleteAccount();
                           },
                         ),
                       ),

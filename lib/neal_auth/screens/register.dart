@@ -26,6 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _selectedRole;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   // Opsi Role Arena Invicta
   final List<String> _roleOptions = [
@@ -212,52 +213,81 @@ class _RegisterPageState extends State<RegisterPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () async {
+                            onPressed: _isLoading ? null : () async {
                               if (_formKey.currentState!.validate()) {
-                                // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
-                                final response = await request.post(
-                                  "http://10.0.2.2:8000/accounts/api/register/",
-                                  {
-                                    'username': _usernameController.text,
-                                    'password': _passwordController.text,
-                                    'confirmPassword':
-                                        _confirmPasswordController.text,
-                                    'role':
-                                        _selectedRole ==
-                                            'Content Staff (Writer & Editor)'
-                                        ? 'content_staff'
-                                        : 'registered',
-                                  },
-                                );
 
-                                if (context.mounted) {
-                                  if (response['status']) {
-                                    // 1. Ambil data
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Welcome to the Arena!"),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                    Navigator.pushNamed(
-                                      context,
-                                      LoginPage.routeName,
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          response['message'] ??
-                                              "Registration Failed",
+                                setState(() {
+                                  _isLoading = true;
+                                });
+
+                                try {
+                                  // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
+                                  final response = await request.post(
+                                    "http://10.0.2.2:8000/accounts/api/register/",
+                                    {
+                                      'username': _usernameController.text,
+                                      'password': _passwordController.text,
+                                      'confirmPassword':
+                                          _confirmPasswordController.text,
+                                      'role':
+                                          _selectedRole ==
+                                              'Content Staff (Writer & Editor)'
+                                          ? 'content_staff'
+                                          : 'registered',
+                                    },
+                                  );
+
+                                  if (context.mounted) {
+                                    if (response['status']) {
+                                      // 1. Ambil data
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("Welcome to the Arena!"),
+                                          backgroundColor: Colors.greenAccent,
                                         ),
-                                        backgroundColor: Colors.red,
-                                      ),
+                                      );
+                                      Navigator.pushNamed(
+                                        context,
+                                        LoginPage.routeName,
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            response['message'] ??
+                                                "Registration Failed",
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Error: $e"), backgroundColor: Colors.redAccent,),
                                     );
                                   }
-                                }
+                                } finally {
+                                  // 3. Stop Loading
+                                  if (mounted) {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                  }
+                                }                                
                               }
                             },
-                            child: const Text(
+                            child: _isLoading 
+                            ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )                             
+                            : const Text(
                               "CREATE ACCOUNT",
                               style: TextStyle(
                                 fontSize: 16,
