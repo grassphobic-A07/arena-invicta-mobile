@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 
 // Simple enum & session helper
 enum UserRole { visitor, registered, staff, admin }
@@ -14,11 +15,13 @@ class UserProvider extends ChangeNotifier {
   UserRole _currentRole = UserRole.visitor;
   bool _isLoggedIn = false; // Status login aktif
   String _username = "";
+  String? _avatarUrl; // Tambahkan ini
 
   // Getters
   UserRole get role => _currentRole;
   bool get isLoggedIn => _isLoggedIn;
   String get username => _username;
+  String? get avatarUrl => _avatarUrl; // Tambahkan getter
 
   String get roleLabel {
     switch (role) {
@@ -34,11 +37,20 @@ class UserProvider extends ChangeNotifier {
   }
 
   // Fungsi untuk Login (dipanggil dari login.dart nanti)
-  void login(UserRole newRole, String username) {
+  void login(UserRole newRole, String username, {String? avatarUrl}) {
     _isLoggedIn = true;
     _currentRole = newRole;
+    _avatarUrl = avatarUrl;
     _username = username;
     notifyListeners(); // <--- PENTING: Memberitahu widget lain untuk rebuild
+  }
+
+  // Tambahkan fungsi khusus update profil
+  void updateProfileData({String? newAvatarUrl}) {
+    if (newAvatarUrl != null) {
+      _avatarUrl = newAvatarUrl;
+      notifyListeners(); // Memberitahu semua widget (termasuk Drawer) untuk refresh
+    }
   }
 
   void logout() {
@@ -105,6 +117,7 @@ class MyApp extends StatelessWidget {
           MyApp.routeName: (context) => MyHomePage(),
           LoginPage.routeName: (context) => const LoginPage(),
           RegisterPage.routeName: (context) => const RegisterPage(),
+          ProfilePage.routeName: (context) => const ProfilePage(),
         },
       ),
     );
@@ -150,15 +163,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () async {
                   // Panggil fungsi logout di provider
                   // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
-                  context.read<UserProvider>().logout();
-      
+                  final request = context.read<CookieRequest>();
+
+                  final response = await request.logout("http://10.0.2.2:8000/accounts/api/logout/");
+                  if (context.mounted) {
+                      context.read<UserProvider>().logout();
+                      
+                      String message = response['message'] ?? "Berhasil Logout!";
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message), backgroundColor: Colors.greenAccent),
+                      );
+                      
+                      // Opsional: Redirect ke Login Page agar bersih
+                      Navigator.pushReplacementNamed(context, MyApp.routeName);
+                  }
                   // Opsional: panggil endpoint logout di Django juga diperlukan
                   // final request = context.read<CookieRequest>();
                   // await request.logout("http://.../accounts/logout/");
       
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Berhasil Logout!"), ),
-                  );
                 },
               ),
             ],

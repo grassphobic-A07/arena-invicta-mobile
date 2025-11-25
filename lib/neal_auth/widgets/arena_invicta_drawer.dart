@@ -1,8 +1,10 @@
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
 class ArenaInvictaDrawer extends StatelessWidget {
@@ -81,23 +83,43 @@ class ArenaInvictaDrawer extends StatelessWidget {
             ),
 
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
+              leading: const Icon(Icons.account_circle, color: Colors.white),
+              title: const Text('My Profile', style: TextStyle(color: Colors.white)),
               onTap: () {
-                // Aksi ketika menu Settings ditekan
+                // 1. Tutup Drawer dulu
+                Navigator.pop(context); 
+                
+                // 2. Pindah ke Halaman Profile
+                Navigator.pushNamed(context, ProfilePage.routeName);
               },
             ),
+
+            // ListTile(
+            //   leading: const Icon(Icons.settings),
+            //   title: const Text('Settings'),
+            //   onTap: () {
+            //     // Aksi ketika menu Settings ditekan
+            //   },
+            // ),
 
             ListTile(
               leading: const Icon(Icons.logout_rounded, color: Colors.redAccent,),
               title: const Text('Logout', style: TextStyle(color: Colors.redAccent),),
-              onTap: () {
-                context.read<UserProvider>().logout();
+              onTap: () async {
+                final request = context.read<CookieRequest>();
 
-                Navigator.pop(context); // Tutup drawer setelah logout
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Berhasil Logout!")),
-                );
+                  final response = await request.logout("http://10.0.2.2:8000/accounts/api/logout/");
+                  if (context.mounted) {
+                      context.read<UserProvider>().logout();
+                      
+                      String message = response['message'] ?? "Berhasil Logout!";
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message), backgroundColor: Colors.greenAccent,),
+                      );
+                      
+                      // Opsional: Redirect ke Login Page agar bersih
+                      Navigator.pushReplacementNamed(context, MyApp.routeName);
+                  }
               },
             )
           ] else ... [
