@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'global/widgets/app_colors.dart';
 
 // Simple enum & session helper
 enum UserRole { visitor, registered, staff, admin }
@@ -47,15 +48,6 @@ class UserProvider extends ChangeNotifier {
   }
 }
 
-// ========== Warna Tema Arena Invicta ==========
-class ArenaColor {
-  static const Color darkAmethyst = Color(0xFF1A103C);
-  static const Color darkAmethystLight = Color(0xFF2A1B54);
-  static const Color purpleX11 = Color(0xFF9333EA);     // Warna Utama (Primary)
-  static const Color dragonFruit = Color(0xFFEC4899);   // Warna Aksen (Secondary)
-  static const Color evergreen = Color(0xFF062726);
-}
-
 
 void main() {
   runApp(const MyApp());
@@ -69,10 +61,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // Supaya bisa ke semua tempat
     return MultiProvider(
       providers: [
         Provider<CookieRequest>(create: (_) => CookieRequest()),
-
         ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
       ],
       child: MaterialApp(
@@ -85,34 +77,25 @@ class MyApp extends StatelessWidget {
             secondary: ArenaColor.dragonFruit,
             surface: ArenaColor.darkAmethyst,
             onSurface: Colors.white,
-            background: ArenaColor.evergreen,
           ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: ArenaColor.darkAmethystLight,
+
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: true,
+            titleTextStyle: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.white,
+            ),
           ),
+
           textTheme: GoogleFonts.poppinsTextTheme(
             Theme.of(context).textTheme,
-          ).copyWith(
-            displayLarge: GoogleFonts.orbitron(
-              textStyle: Theme.of(context).textTheme.displayLarge,
-              color: Colors.white,
-            ),
-            displayMedium: GoogleFonts.orbitron(
-              textStyle: Theme.of(context).textTheme.displayMedium,
-              color: Colors.white,
-            ),
-            headlineLarge: GoogleFonts.orbitron(
-              textStyle: Theme.of(context).textTheme.headlineLarge,
-              color: Colors.white,
-            ),
-            headlineMedium: GoogleFonts.orbitron(
-              textStyle: Theme.of(context).textTheme.headlineMedium,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            bodyLarge: GoogleFonts.poppins(color: Colors.white),
-            bodyMedium: GoogleFonts.poppins(color: Colors.white70),
+          ).apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
           ),
         ),
 
@@ -133,7 +116,7 @@ class MyHomePage extends StatefulWidget {
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
-}
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
@@ -141,67 +124,68 @@ class _MyHomePageState extends State<MyHomePage> {
     final userProvider = context.watch<UserProvider>();
     final roleText = userProvider.roleLabel;
 
-    return Scaffold(
-      // App Bar
-      appBar: AppBar(
-        backgroundColor: AppBarTheme.of(context).backgroundColor,
-        foregroundColor: AppBarTheme.of(context).foregroundColor,
-        title: const Text("Arena Invicta"),
-        actions: [
-          if (!userProvider.isLoggedIn) ...[
-            IconButton(
-              icon: const Icon(Icons.login),
-              onPressed: () {
-                Navigator.pushNamed(context, LoginPage.routeName);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.app_registration),
-              onPressed: () {
-                Navigator.pushNamed(context, RegisterPage.routeName);
-              },
-            ),
-          ] else ...[
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () async {
-                // Panggil fungsi logout di provider
-                // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
-                context.read<UserProvider>().logout();
-
-                // Opsional: panggil endpoint logout di Django juga diperlukan
-                // final request = context.read<CookieRequest>();
-                // await request.logout("http://.../accounts/logout/");
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Berhasil Logout!")),
-                );
-              },
-            ),
-          ],
-        ],
-      ),
-
-      // Drawer App
-      drawer: ArenaInvictaDrawer(
-        userProvider: userProvider,
-        roleText: roleText,
-      ),
-
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Role aktif: $roleText'),
-            const SizedBox(height: 12),
+    return Container(
+      decoration: ArenaColor.mainBackgroundGradient,
+      child: Scaffold(
+        // App Bar
+        appBar: AppBar(
+          backgroundColor: AppBarTheme.of(context).backgroundColor,
+          foregroundColor: AppBarTheme.of(context).foregroundColor,
+          title: const Text("Arena Invicta"),
+          actions: [
             if (!userProvider.isLoggedIn) ...[
-              const Text(
-                'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
-                style: TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, LoginPage.routeName);
+                },
+                icon: const Icon(Icons.login, color: ArenaColor.textWhite,),
+                label: const Text(
+                  "Login",
+                  style: TextStyle(color: ArenaColor.textWhite),
+                ),
+              ),
+            ] else ...[
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () async {
+                  // Panggil fungsi logout di provider
+                  // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
+                  context.read<UserProvider>().logout();
+      
+                  // Opsional: panggil endpoint logout di Django juga diperlukan
+                  // final request = context.read<CookieRequest>();
+                  // await request.logout("http://.../accounts/logout/");
+      
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Berhasil Logout!"), ),
+                  );
+                },
               ),
             ],
           ],
+        ),
+      
+        // Drawer App
+        drawer: ArenaInvictaDrawer(
+          userProvider: userProvider,
+          roleText: roleText,
+        ),
+      
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text('Role aktif: $roleText'),
+              const SizedBox(height: 12),
+              if (!userProvider.isLoggedIn) ...[
+                const Text(
+                  'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
+                  style: TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
