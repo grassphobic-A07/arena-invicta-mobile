@@ -16,6 +16,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   bool _isLoading = true;
   Map<String, dynamic> _stats = {};
   List<dynamic> _users = [];
+  
 
   @override
   void initState() {
@@ -83,6 +84,61 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String _createRole = "registered"; // Default role saat create
+  bool _isCreating = false;
+
+  Future<void> createNewUser() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Username dan Password tidak boleh kosong."),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    setState(() { _isCreating = true; }); // Mulai loading
+
+    final request = context.read<CookieRequest>();
+    try {
+      final Map<String, String> data = {
+        'op': 'create_user',
+        'username': _usernameController.text,
+        'password': _passwordController.text,
+        'role': _createRole,
+      };
+
+      final response = await request.post(
+        "http://10.0.2.2:8000/accounts/api/admin/dashboard/",
+        data,
+      );
+
+      if (response['status'] == true) {
+        // Reset Form
+        _usernameController.clear();
+        _passwordController.clear();
+        setState(() { _createRole = "registered"; });
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(response['message']),
+          backgroundColor: Colors.greenAccent,
+        ));
+        
+        fetchAdminData(); // Refresh List User
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(response['message'] ?? "Gagal membuat user."),
+          backgroundColor: Colors.redAccent,
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    } finally {
+      setState(() { _isCreating = false; }); // Stop loading
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +167,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
 
             const SizedBox(height: 24),
-                  
+            _buildCreateUserForm(),
+            const SizedBox(height: 24),        
             const Text("User Management", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
@@ -279,6 +336,104 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               )
             ],
           )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCreateUserForm() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: ArenaColor.darkAmethystLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ArenaColor.purpleX11), // Border Ungu Terang
+      ),
+      child: ExpansionTile(
+        iconColor: Colors.white,
+        collapsedIconColor: Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.person_add, color: Colors.white),
+            SizedBox(width: 10),
+            Text("Create New User", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // Input Username
+                TextField(
+                  controller: _usernameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: "Username",
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Input Password
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Dropdown Role
+                DropdownButtonFormField<String>(
+                  value: _createRole,
+                  dropdownColor: ArenaColor.darkAmethyst,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: "Role",
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: "registered", child: Text("Registered")),
+                    DropdownMenuItem(value: "content_staff", child: Text("Content Staff")),
+                    DropdownMenuItem(value: "admin", child: Text("Admin")),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _createRole = val);
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Tombol Create
+                SizedBox(
+                  width: double.infinity,
+                  height: 45,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ArenaColor.purpleX11,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: _isCreating ? null : createNewUser,
+                    child: _isCreating 
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text("Create Account", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
+            ),
+          ),
         ],
       ),
     );
