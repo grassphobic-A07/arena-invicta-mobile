@@ -129,7 +129,7 @@ class ArenaInvictaDrawer extends StatelessWidget {
               onTap: () async {
                 final request = context.read<CookieRequest>();
 
-                  final response = await request.logout("http://10.0.2.2:8000/accounts/api/logout/");
+                  final response = await request.logout("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/logout/");
                   if (context.mounted) {
                       context.read<UserProvider>().logout();
                       

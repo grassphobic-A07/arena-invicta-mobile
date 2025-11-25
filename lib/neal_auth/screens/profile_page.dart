@@ -54,7 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final request = context.read<CookieRequest>();
     try {
       final response = await request.get(
-        "http://10.0.2.2:8000/accounts/api/profile/json/",
+        "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/json/",
       );
       setState(() {
         _userProfile = UserProfile.fromJson(response);
@@ -79,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final request = context.read<CookieRequest>();
     try {
       final response = await request
-          .post('http://10.0.2.2:8000/accounts/api/profile/edit/', {
+          .post('https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/edit/', {
             'display_name': _displayNameController.text,
             'favourite_team': _favTeamController.text,
             'avatar_url': _avatarUrlController.text,
@@ -150,7 +150,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       // 2. Panggil API Delete
       final response = await request.post(
-        "http://10.0.2.2:8000/accounts/api/profile/delete/",
+        "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/delete/",
         {}, // Body kosong
       );
 
@@ -194,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> performDelete() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.post("http://10.0.2.2:8000/accounts/api/profile/delete/", {});
+      final response = await request.post("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/delete/", {});
 
       if (response['status']) {
         if (!mounted) return; 
