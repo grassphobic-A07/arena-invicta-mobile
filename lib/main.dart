@@ -5,6 +5,7 @@ import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/create_discussion_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
@@ -130,6 +131,7 @@ class MyApp extends StatelessWidget {
           RegisterPage.routeName: (context) => const RegisterPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
           DiscussionsPage.routeName: (context) => const DiscussionsPage(),
+          CreateDiscussionPage.routeName: (context) => const CreateDiscussionPage(),
         },
         
         // --- BAGIAN PENTING: BUNGKUS SEMUA HALAMAN DI SINI ---

@@ -1,3 +1,4 @@
+import 'package:arena_invicta_mobile/adam_discussions/create_discussion_page.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
 import 'package:arena_invicta_mobile/main.dart';
@@ -24,6 +25,33 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
   void initState() {
     super.initState();
     _fetchThreads();
+  }
+
+  Future<void> _openCreate() async {
+    final user = context.read<UserProvider>();
+    if (!user.isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
+          content: const Text('Silakan login untuk membuat diskusi.'),
+          action: SnackBarAction(
+            label: 'Login',
+            textColor: Colors.white,
+            onPressed: () => Navigator.pushNamed(context, LoginPage.routeName),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateDiscussionPage()),
+    );
+    if (created == true) {
+      _fetchThreads();
+    }
   }
 
   Future<void> _fetchThreads() async {
@@ -125,7 +153,7 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
                     title: 'Mulai Diskusi Baru',
                     subtitle: 'Bagikan opini, analisis taktik, atau tanya komunitas.',
                     ctaLabel: 'Tulis Diskusi',
-                    onTap: () {},
+                    onTap: _openCreate,
                   ),
                   const SizedBox(height: 12),
                   _FilterChips(
