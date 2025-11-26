@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +32,9 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final userProvider = context.read<UserProvider>();
-    if (!userProvider.isLoggedIn) {
+    final request = context.read<CookieRequest>();
+
+    if (!userProvider.isLoggedIn || !request.loggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -47,15 +51,16 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
     }
 
     setState(() => _isSubmitting = true);
-    final request = context.read<CookieRequest>();
 
     try {
-      final response = await request.post(
+      final payload = jsonEncode({
+        'title': _titleController.text.trim(),
+        'body': _bodyController.text.trim(),
+      });
+
+      final response = await request.postJson(
         'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/discussions/api/threads/create/',
-        {
-          'title': _titleController.text.trim(),
-          'body': _bodyController.text.trim(),
-        },
+        payload,
       );
 
       final ok = response['ok'] == true || response['status'] == true;
@@ -70,12 +75,23 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
         );
         Navigator.pop(context, true);
       } else if (mounted) {
-        final msg = response['message'] ?? 'Gagal membuat diskusi.';
+        final msg = response['message'] ?? response['error'] ?? 'Gagal membuat diskusi.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
             content: Text(msg),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } on FormatException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
+            content: Text('Respon server tidak valid JSON. Pastikan sudah login dan akses diizinkan. Detail: $e'),
             backgroundColor: Colors.redAccent,
           ),
         );
