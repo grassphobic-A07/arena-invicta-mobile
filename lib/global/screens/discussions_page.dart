@@ -2,11 +2,46 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
-class DiscussionsPage extends StatelessWidget {
+class DiscussionsPage extends StatefulWidget {
   const DiscussionsPage({super.key});
 
   static const routeName = '/discussions';
+
+  @override
+  State<DiscussionsPage> createState() => _DiscussionsPageState();
+}
+
+class _DiscussionsPageState extends State<DiscussionsPage> {
+  List<DiscussionThread> _threads = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchThreads();
+  }
+
+  Future<void> _fetchThreads() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.get("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/discussions/api/threads/");
+      final rawThreads = (response['threads'] as List<dynamic>? ?? []);
+      setState(() {
+        _threads = rawThreads.map((json) => DiscussionThread.fromJson(json as Map<String, dynamic>)).toList();
+        _isLoading = false;
+        _error = null;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Gagal memuat diskusi: $e';
+      });
+    }
+  }
 
   void _handleNavTap(BuildContext context, int index) {
     switch (index) {
@@ -27,33 +62,6 @@ class DiscussionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final threads = [
-      _Thread(
-        title: 'Prediksi Liga Champions: City vs Madrid',
-        author: 'astroball',
-        replies: 128,
-        views: 3.2,
-        tags: ['Taktik', 'UCL'],
-        timeAgo: '2h',
-      ),
-      _Thread(
-        title: 'Formasi terbaik untuk menahan high press?',
-        author: 'tikitaka_id',
-        replies: 64,
-        views: 1.4,
-        tags: ['Coaching', 'Diskusi'],
-        timeAgo: '4h',
-      ),
-      _Thread(
-        title: 'Siapa striker muda paling klinis musim ini?',
-        author: 'databall',
-        replies: 42,
-        views: 0.9,
-        tags: ['Prospec', 'Statistik'],
-        timeAgo: '6h',
-      ),
-    ];
-
     return Stack(
       children: [
         Positioned.fill(
@@ -98,10 +106,11 @@ class DiscussionsPage extends StatelessWidget {
             ],
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: RefreshIndicator(
+              onRefresh: _fetchThreads,
+              child: ListView(
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
                 children: [
                   _HeroCard(
                     title: 'Mulai Diskusi Baru',
@@ -115,7 +124,16 @@ class DiscussionsPage extends StatelessWidget {
                     onSelected: (_) {},
                   ),
                   const SizedBox(height: 12),
-                  ...threads.map((t) => _ThreadCard(thread: t)),
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 80),
+                      child: Center(child: CircularProgressIndicator(color: ArenaColor.purpleX11)),
+                    )
+                  else if (_error != null)
+                    _ErrorCard(message: _error!, onRetry: _fetchThreads)
+                  else if (_threads.isEmpty)
+                    const _EmptyState()
+                  else ..._threads.map((t) => _ThreadCard(thread: t)),
                 ],
               ),
             ),
@@ -249,7 +267,7 @@ class _FilterChipsState extends State<_FilterChips> {
 class _ThreadCard extends StatelessWidget {
   const _ThreadCard({required this.thread});
 
-  final _Thread thread;
+  final DiscussionThread thread;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +297,7 @@ class _ThreadCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  thread.author.isNotEmpty ? thread.author[0].toUpperCase() : '?',
+                  thread.authorDisplay.isNotEmpty ? thread.authorDisplay[0].toUpperCase() : '?',
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -298,7 +316,7 @@ class _ThreadCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'oleh ${thread.author} · ${thread.timeAgo} yang lalu',
+                      'oleh ${thread.authorDisplay} · ${thread.relativeTime}',
                       style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12),
                     ),
                   ],
@@ -308,36 +326,104 @@ class _ThreadCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: -4,
-            children: thread.tags
-                .map(
-                  (tag) => Chip(
-                    label: Text(tag),
-                    labelStyle: const TextStyle(color: Colors.white, fontSize: 12),
-                    backgroundColor: Colors.white.withOpacity(0.08),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.white.withOpacity(0.1)),
+          if (thread.tags.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: -4,
+              children: thread.tags
+                  .map(
+                    (tag) => Chip(
+                      label: Text(tag),
+                      labelStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                      backgroundColor: Colors.white.withOpacity(0.08),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 10),
+                  )
+                  .toList(),
+            ),
+          if (thread.tags.isNotEmpty) const SizedBox(height: 10),
           Row(
             children: [
               const Icon(Icons.mode_comment_outlined, color: Colors.white54, size: 18),
               const SizedBox(width: 6),
-              Text('${thread.replies}', style: const TextStyle(color: Colors.white70)),
+              Text('${thread.commentCount}', style: const TextStyle(color: Colors.white70)),
               const SizedBox(width: 12),
               const Icon(Icons.visibility_outlined, color: Colors.white54, size: 18),
               const SizedBox(width: 6),
-              Text('${thread.views.toStringAsFixed(1)}k', style: const TextStyle(color: Colors.white70)),
+              Text(_formatCount(thread.viewsCount), style: const TextStyle(color: Colors.white70)),
               const Spacer(),
-              Text('Terakhir ${thread.timeAgo}', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+              const Icon(Icons.thumb_up_alt_outlined, color: Colors.white54, size: 18),
+              const SizedBox(width: 6),
+              Text(_formatCount(thread.upvoteCount), style: const TextStyle(color: Colors.white70)),
             ],
+          ),
+          if (thread.newsTitle != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white.withOpacity(0.06)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Terkait: ${thread.newsTitle}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  if (thread.newsSummary != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      thread.newsSummary ?? '',
+                      style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gagal memuat',
+            style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(message, style: TextStyle(color: Colors.white.withOpacity(0.8))),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text('Coba lagi', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -345,20 +431,104 @@ class _ThreadCard extends StatelessWidget {
   }
 }
 
-class _Thread {
-  const _Thread({
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.inbox_outlined, color: Colors.white54),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Belum ada diskusi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Mulai topik pertama dan ajak komunitas berdiskusi.', style: TextStyle(color: Colors.white.withOpacity(0.8))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DiscussionThread {
+  const DiscussionThread({
+    required this.id,
     required this.title,
-    required this.author,
-    required this.replies,
-    required this.views,
-    required this.tags,
-    required this.timeAgo,
+    required this.authorDisplay,
+    required this.createdAt,
+    required this.commentCount,
+    required this.upvoteCount,
+    required this.viewsCount,
+    this.newsTitle,
+    this.newsSummary,
   });
 
+  factory DiscussionThread.fromJson(Map<String, dynamic> json) {
+    final author = json['author'] as Map<String, dynamic>? ?? {};
+    final news = json['news'] as Map<String, dynamic>? ?? {};
+    return DiscussionThread(
+      id: json['id'] as int,
+      title: json['title'] as String? ?? '',
+      authorDisplay: author['display_name'] as String? ?? author['username'] as String? ?? 'Anonim',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+      commentCount: json['comment_count'] as int? ?? 0,
+      upvoteCount: json['upvote_count'] as int? ?? 0,
+      viewsCount: json['views_count'] as int? ?? 0,
+      newsTitle: news['title'] as String?,
+      newsSummary: news['summary'] as String?,
+    );
+  }
+
+  final int id;
   final String title;
-  final String author;
-  final int replies;
-  final double views;
-  final List<String> tags;
-  final String timeAgo;
+  final String authorDisplay;
+  final DateTime createdAt;
+  final int commentCount;
+  final int upvoteCount;
+  final int viewsCount;
+  final String? newsTitle;
+  final String? newsSummary;
+
+  List<String> get tags {
+    final list = <String>[];
+    if (newsTitle != null) list.add('News');
+    if (upvoteCount > 10) list.add('Populer');
+    if (commentCount == 0) list.add('Belum Dijawab');
+    return list;
+  }
+
+  String get relativeTime => _formatRelative(createdAt);
+}
+
+String _formatCount(int value) {
+  if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}m';
+  if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
+  return value.toString();
+}
+
+String _formatRelative(DateTime dateTime) {
+  final diff = DateTime.now().difference(dateTime);
+  if (diff.inMinutes < 1) return 'Baru saja';
+  if (diff.inHours < 1) return '${diff.inMinutes}m';
+  if (diff.inHours < 24) return '${diff.inHours}h';
+  if (diff.inDays < 7) return '${diff.inDays}d';
+  final weeks = (diff.inDays / 7).floor();
+  if (weeks < 4) return '${weeks}w';
+  final months = (diff.inDays / 30).floor();
+  if (months < 12) return '${months}mo';
+  final years = (diff.inDays / 365).floor();
+  return '${years}y';
 }
