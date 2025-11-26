@@ -103,12 +103,16 @@ class GlassBottomNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(buttonSize / 2),
-                onTap: onCenterTap,
-                child: const Icon(
-                  Icons.grid_view_rounded,
-                  color: Colors.white,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onCenterTap,
+                  child: const Icon(
+                    Icons.grid_view_rounded,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
