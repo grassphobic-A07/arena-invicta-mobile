@@ -19,13 +19,49 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
+  final _newsIdController = TextEditingController();
+  String? _newsPreview;
   bool _isSubmitting = false;
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
+    _newsIdController.dispose();
     super.dispose();
+  }
+
+  Future<void> _validateNews() async {
+    final id = _newsIdController.text.trim();
+    if (id.isEmpty) {
+      setState(() => _newsPreview = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
+          content: Text('Masukkan ID berita (UUID) dulu.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final res = await context.read<CookieRequest>().get(
+            'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/news/$id/json-data',
+          );
+      final title = res['title'] as String? ?? '';
+      setState(() => _newsPreview = title.isNotEmpty ? title : null);
+    } catch (_) {
+      setState(() => _newsPreview = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
+          content: Text('ID berita tidak ditemukan.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -56,6 +92,7 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
       final payload = jsonEncode({
         'title': _titleController.text.trim(),
         'body': _bodyController.text.trim(),
+        'news': _newsIdController.text.trim(),
       });
 
       final response = await request.postJson(
@@ -171,6 +208,46 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
                       style: const TextStyle(color: Colors.white),
                       validator: (val) => (val == null || val.trim().isEmpty) ? 'Judul wajib diisi' : null,
                     ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _newsIdController,
+                            decoration: _inputDecoration('ID Berita (UUID)'),
+                            style: const TextStyle(color: Colors.white),
+                            validator: (val) => (val == null || val.trim().isEmpty) ? 'ID berita wajib diisi' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.12),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: _validateNews,
+                          child: const Text('Validasi'),
+                        ),
+                      ],
+                    ),
+                    if (_newsPreview != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: Text(
+                          'Berita: $_newsPreview',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _bodyController,
