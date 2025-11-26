@@ -1,3 +1,4 @@
+import 'package:arena_invicta_mobile/global/screens/splash_screen.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Arena Invicta',
         themeMode: ThemeMode.dark,
         darkTheme: ThemeData(
@@ -112,8 +114,9 @@ class MyApp extends StatelessWidget {
         ),
 
         // Route Management dan Route Utama
-        initialRoute: MyApp.routeName,
+        initialRoute: SplashScreen.routeName,
         routes: {
+          SplashScreen.routeName: (context) => const SplashScreen(),
           MyApp.routeName: (context) => MyHomePage(),
           LoginPage.routeName: (context) => const LoginPage(),
           RegisterPage.routeName: (context) => const RegisterPage(),
@@ -165,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
                   final request = context.read<CookieRequest>();
 
-                  final response = await request.logout("http://10.0.2.2:8000/accounts/api/logout/");
+                  final response = await request.logout("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/logout/");
                   if (context.mounted) {
                       context.read<UserProvider>().logout();
                       
@@ -200,10 +203,13 @@ class _MyHomePageState extends State<MyHomePage> {
               Text('Role aktif: $roleText'),
               const SizedBox(height: 12),
               if (!userProvider.isLoggedIn) ...[
-                const Text(
-                  'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
-                  style: TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: const Text(
+                    'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ],

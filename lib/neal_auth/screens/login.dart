@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: screenHeight * 0.12),
+              SizedBox(height: screenHeight * 0.02),
 
               // --- LOGO / JUDUL ---
               const Icon(
