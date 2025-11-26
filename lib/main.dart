@@ -181,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 center: Alignment.topLeft,
                 radius: 1.2,
                 colors: [
-                  Color(0xFF2A1B54),
+                  Color(0xFF9333EA),
                   Color(0xFF1A103C),
                 ],
               ),
@@ -195,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 center: Alignment.bottomRight,
                 radius: 1.2,
                 colors: [
-                  Color(0xFF9333EA),
+                  Color(0xFF4A49A0),
                   Color(0xFF1A103C),
                 ],
               ),
