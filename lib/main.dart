@@ -121,8 +121,9 @@ class MyApp extends StatelessWidget {
         ),
 
         // Route Management dan Route Utama
-        initialRoute: SplashScreen.routeName,
+        initialRoute: '/',
         routes: {
+          '/': (context) => const SplashScreen(),
           SplashScreen.routeName: (context) => const SplashScreen(),
           MyApp.routeName: (context) => MyHomePage(),
           LoginPage.routeName: (context) => const LoginPage(),
