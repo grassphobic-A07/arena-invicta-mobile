@@ -103,6 +103,14 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
                 icon: const Icon(Icons.search),
                 onPressed: () {},
               ),
+              TextButton.icon(
+                onPressed: () => Navigator.pushNamed(context, LoginPage.routeName),
+                icon: const Icon(Icons.login, color: Colors.white),
+                label: const Text(
+                  'Login',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ],
           ),
           body: SafeArea(
