@@ -31,24 +31,42 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
     super.dispose();
   }
 
+  String? _extractNewsId(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    try {
+      // If it looks like a URL, pull the segment after /news/
+      final uri = Uri.parse(text);
+      final newsSegment = uri.pathSegments.contains('news')
+          ? uri.pathSegments[uri.pathSegments.indexOf('news') + 1]
+          : uri.pathSegments.isNotEmpty
+              ? uri.pathSegments.last
+              : text;
+      return newsSegment.replaceAll('/', '');
+    } catch (_) {
+      // Fallback to raw text
+      return text;
+    }
+  }
+
   Future<void> _validateNews() async {
-    final id = _newsIdController.text.trim();
-    if (id.isEmpty) {
+    final id = _extractNewsId(_newsIdController.text);
+    if (id == null || id.isEmpty) {
       setState(() => _newsPreview = null);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
-          content: Text('Masukkan ID berita (UUID) dulu.'),
+          content: Text('Masukkan ID/URL berita dulu.'),
         ),
       );
       return;
     }
 
     try {
-      final res = await context.read<CookieRequest>().get(
-            'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/news/$id/json-data',
-          );
+      final res = await context
+          .read<CookieRequest>()
+          .get('https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/news/$id/json-data');
       final title = res['title'] as String? ?? '';
       setState(() => _newsPreview = title.isNotEmpty ? title : null);
     } catch (_) {
@@ -57,7 +75,7 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
         const SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
-          content: Text('ID berita tidak ditemukan.'),
+          content: Text('Berita tidak ditemukan. Coba periksa ID/URL.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -89,10 +107,11 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
     setState(() => _isSubmitting = true);
 
     try {
+      final newsId = _extractNewsId(_newsIdController.text);
       final payload = jsonEncode({
         'title': _titleController.text.trim(),
         'body': _bodyController.text.trim(),
-        'news': _newsIdController.text.trim(),
+        'news': newsId ?? '',
       });
 
       final response = await request.postJson(
@@ -214,7 +233,7 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
                         Expanded(
                           child: TextFormField(
                             controller: _newsIdController,
-                            decoration: _inputDecoration('ID Berita (UUID)'),
+                            decoration: _inputDecoration('ID / URL Berita'),
                             style: const TextStyle(color: Colors.white),
                             validator: (val) => (val == null || val.trim().isEmpty) ? 'ID berita wajib diisi' : null,
                           ),
