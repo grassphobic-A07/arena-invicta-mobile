@@ -6,6 +6,7 @@ import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'global/widgets/app_colors.dart';
@@ -173,79 +174,89 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Container(
       decoration: ArenaColor.mainBackgroundGradient,
-      child: Scaffold(
-        // App Bar
-        appBar: AppBar(
-          backgroundColor: AppBarTheme.of(context).backgroundColor,
-          foregroundColor: AppBarTheme.of(context).foregroundColor,
-          title: const Text("Arena Invicta"),
-          actions: [
-            if (!userProvider.isLoggedIn) ...[
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, LoginPage.routeName);
-                },
-                icon: const Icon(Icons.login, color: ArenaColor.textWhite,),
-                label: const Text(
-                  "Login",
-                  style: TextStyle(color: ArenaColor.textWhite),
-                ),
-              ),
-            ] else ...[
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () async {
-                  // Panggil fungsi logout di provider
-                  // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
-                  final request = context.read<CookieRequest>();
-
-                  final response = await request.logout("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/logout/");
-                  if (context.mounted) {
-                      context.read<UserProvider>().logout();
-                      
-                      String message = response['message'] ?? "Berhasil Logout!";
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(message), backgroundColor: Colors.greenAccent),
-                      );
-                      
-                      // Opsional: Redirect ke Login Page agar bersih
-                      Navigator.pushReplacementNamed(context, MyApp.routeName);
-                  }
-                  // Opsional: panggil endpoint logout di Django juga diperlukan
-                  // final request = context.read<CookieRequest>();
-                  // await request.logout("http://.../accounts/logout/");
-      
-                },
-              ),
-            ],
-          ],
-        ),
-      
-        // Drawer App
-        drawer: ArenaInvictaDrawer(
-          userProvider: userProvider,
-          roleText: roleText,
-        ),
-      
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text('Role aktif: $roleText'),
-              const SizedBox(height: 12),
-              if (!userProvider.isLoggedIn) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: const Text(
-                    'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: AppBarTheme.of(context).backgroundColor,
+              foregroundColor: AppBarTheme.of(context).foregroundColor,
+              title: const Text("Arena Invicta"),
+              actions: [
+                if (!userProvider.isLoggedIn) ...[
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, LoginPage.routeName);
+                    },
+                    icon: const Icon(Icons.login, color: ArenaColor.textWhite,),
+                    label: const Text(
+                      "Login",
+                      style: TextStyle(color: ArenaColor.textWhite),
+                    ),
                   ),
-                ),
+                ] else ...[
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () async {
+                      // Panggil fungsi logout di provider
+                      // Gunakan context.read karena ini di dalam onPressed (tidak butuh watch)
+                      final request = context.read<CookieRequest>();
+
+                      final response = await request.logout("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/logout/");
+                      if (context.mounted) {
+                          context.read<UserProvider>().logout();
+                          
+                          String message = response['message'] ?? "Berhasil Logout!";
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(message), backgroundColor: Colors.greenAccent),
+                          );
+                          
+                          // Opsional: Redirect ke Login Page agar bersih
+                          Navigator.pushReplacementNamed(context, MyApp.routeName);
+                      }
+                      // Opsional: panggil endpoint logout di Django juga diperlukan
+                      // final request = context.read<CookieRequest>();
+                      // await request.logout("http://.../accounts/logout/");
+          
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
+          
+            // Drawer App
+            drawer: ArenaInvictaDrawer(
+              userProvider: userProvider,
+              roleText: roleText,
+            ),
+          
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text('Role aktif: $roleText'),
+                  const SizedBox(height: 12),
+                  if (!userProvider.isLoggedIn) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: const Text(
+                        'Anda belum login. Silakan login untuk mengakses fitur lebih lengkap.',
+                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
-        ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: const GlassBottomNavBar(),
+          ),
+        ],
       ),
     );
   }
