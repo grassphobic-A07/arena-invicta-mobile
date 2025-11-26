@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 
 class OfflineOverlayWrapper extends StatelessWidget {
   // Widget ini akan membungkus halaman apapun yang sedang aktif. 
-  //Dia menggunakan Stack. Lapisan bawahnya adalah halaman aplikasi, 
-  //lapisan atasnya adalah layar hitam transparan dengan loading yang 
-  //hanya muncul jika internet mati.
+  // Dia menggunakan Stack. Lapisan bawahnya adalah halaman aplikasi, 
+  // lapisan atasnya adalah layar hitam transparan dengan loading yang 
+  // hanya muncul jika internet mati.
   final Widget child;
 
   const OfflineOverlayWrapper({super.key, required this.child});
@@ -45,16 +45,22 @@ class OfflineOverlayWrapper extends StatelessWidget {
                   // Teks Keren
                   Text(
                     "LOST CONNECTION TO THE ARENA",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white, 
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2
+                      letterSpacing: 1.2,
+                      fontSize: 20,
                     ),
                   ),
                    SizedBox(height: 10),
                    Text(
                     "Reconnecting...",
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      letterSpacing: 1.2,
+                      fontSize: 18,
+                    ),
                   ),
                   SizedBox(height: 30),
                   // Loading indicator sesuai request

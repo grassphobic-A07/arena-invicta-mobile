@@ -413,9 +413,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       maxLines: 4,
                       enabled: _isEditing,
                     ),
+                    
+                    if (_isEditing) ...[
+                      const SizedBox(height: 20),
 
-
-                    if (_isEditing)
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -435,6 +436,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ),
+                    ],
 
                     if (!_isEditing) ...[
                       const Divider(height: 40),
