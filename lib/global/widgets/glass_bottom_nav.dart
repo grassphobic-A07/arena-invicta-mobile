@@ -64,7 +64,7 @@ class GlassBottomNavBar extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -20,
+            top: 0,
             child: Container(
               height: buttonSize,
               width: buttonSize,
