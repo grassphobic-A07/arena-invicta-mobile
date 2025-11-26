@@ -1,4 +1,6 @@
+import 'package:arena_invicta_mobile/global/providers/connection_provider.dart';
 import 'package:arena_invicta_mobile/global/screens/splash_screen.dart';
+import 'package:arena_invicta_mobile/global/widgets/offline_overlay.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
@@ -79,6 +81,9 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<CookieRequest>(create: (_) => CookieRequest()),
         ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
+
+        // Provider untuk check koneksi internet di semua halaman aplikasi. Karena basisnya harus konek
+        ChangeNotifierProvider<ConnectionProvider>(create: (_) => ConnectionProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -121,6 +126,32 @@ class MyApp extends StatelessWidget {
           LoginPage.routeName: (context) => const LoginPage(),
           RegisterPage.routeName: (context) => const RegisterPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
+        },
+        
+        // --- BAGIAN PENTING: BUNGKUS SEMUA HALAMAN DI SINI ---
+        builder: (context, child) {
+          /* Bagaimana Hasilnya?
+
+            1. Splash Screen: Tetap berfungsi sebagai gerbang awal. Dia memastikan internet ada sebelum masuk ke Home pertama kali.
+
+            2. Global Blocker: Setelah masuk ke aplikasi (Home, Login, Register, dll), jika tiba-tiba internet mati:
+
+                - ConnectionProvider akan mendeteksi perubahan status menjadi disconnected.
+
+                - Dia memberi tahu OfflineOverlayWrapper.
+
+                - OfflineOverlayWrapper akan memunculkan layar hitam transparan dengan CircularProgressIndicator di atas halaman yang sedang aktif.
+
+                - Pengguna tidak bisa menekan tombol apa pun di balik layar hitam itu (IgnorePointer).
+
+            3. Auto Reconnect: Begitu internet nyala lagi:
+
+                - Provider mendeteksi status connected.
+
+                - Layar hitam otomatis hilang, dan pengguna bisa lanjut menggunakan aplikasi dari halaman terakhir mereka berada. */
+          // 'child' di sini adalah halaman manapun yang sedang dibuka oleh Navigator
+          // Kita bungkus dia dengan OfflineOverlayWrapper
+          return OfflineOverlayWrapper(child: child!);
         },
       ),
     );
