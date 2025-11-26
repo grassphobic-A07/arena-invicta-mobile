@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'dart:convert';
+
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
@@ -19,181 +21,74 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
+  final _newsIdController = TextEditingController();
+  String? _newsPreview;
   bool _isSubmitting = false;
-
-  List<NewsOption> _newsOptions = [];
-  NewsOption? _selectedNews;
-  bool _loadingNews = false;
-  String? _newsError;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadNewsOptions();
-  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
+    _newsIdController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadNewsOptions() async {
-    final request = context.read<CookieRequest>();
-    if (!request.loggedIn) return;
-
-    setState(() {
-      _loadingNews = true;
-      _newsError = null;
-    });
+  String? _extractNewsId(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
     try {
-      // Fetch the thread create page and parse the news select options (mirrors web UI).
-      final html = await request.get(
-        'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/discussions/threads/create/',
-        headers: const {'Accept': 'text/html'},
-      );
-      final raw = html is String ? html : html.toString();
-      final options = _parseNewsOptions(raw);
-      setState(() {
-        _newsOptions = options;
-        _loadingNews = false;
-      });
-    } catch (e) {
-      setState(() {
-        _loadingNews = false;
-        _newsError = 'Gagal memuat daftar berita. Pastikan sudah login.';
-      });
+      final uri = Uri.parse(text);
+      final segment = uri.pathSegments.contains('news')
+          ? uri.pathSegments[uri.pathSegments.indexOf('news') + 1]
+          : (uri.pathSegments.isNotEmpty ? uri.pathSegments.last : text);
+      return segment.replaceAll('/', '');
+    } catch (_) {
+      return text;
     }
   }
 
-  List<NewsOption> _parseNewsOptions(String html) {
-    final regex = RegExp(
-      r'<option[^>]*value="([^"]+)"[^>]*>([^<]+)<\/option>',
-      caseSensitive: false,
-      multiLine: true,
-    );
-    final matches = regex.allMatches(html);
-    return matches
-        .map((m) {
-          final value = m.group(1)?.trim() ?? '';
-          final label = m.group(2)?.trim() ?? '';
-          if (value.isEmpty || value == '---------') return null;
-          // Label often contains "(uuid)"; strip if present.
-          final cleanedLabel = label.replaceAll(RegExp(r'\s*\([^)]*\)$'), '');
-          return NewsOption(id: value, title: cleanedLabel.isNotEmpty ? cleanedLabel : label);
-        })
-        .whereType<NewsOption>()
-        .toList();
-  }
-
-  Future<void> _openNewsPicker() async {
-    if (_loadingNews) return;
-    if (_newsOptions.isEmpty) {
-      setState(() => _newsError = 'Daftar berita kosong atau gagal dimuat.');
+  Future<void> _validateNews() async {
+    final id = _extractNewsId(_newsIdController.text);
+    if (id == null || id.isEmpty) {
+      setState(() => _newsPreview = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
+          content: Text('Masukkan ID/URL berita dulu.'),
+        ),
+      );
       return;
     }
 
-    final selected = await showModalBottomSheet<NewsOption>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        final controller = TextEditingController();
-        List<NewsOption> filtered = List.of(_newsOptions);
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            void filter(String query) {
-              final q = query.toLowerCase();
-              setModalState(() {
-                filtered = _newsOptions
-                    .where((n) => n.title.toLowerCase().contains(q) || n.id.toLowerCase().contains(q))
-                    .toList();
-              });
-            }
-
-            return DraggableScrollableSheet(
-              initialChildSize: 0.65,
-              minChildSize: 0.45,
-              maxChildSize: 0.9,
-              builder: (_, scrollController) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E153F),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: controller,
-                        onChanged: filter,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: 'Cari berita...',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-                          filled: true,
-                          fillColor: Colors.black.withOpacity(0.25),
-                          prefixIcon: const Icon(Icons.search, color: Colors.white70),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: filtered.length,
-                          itemBuilder: (_, index) {
-                            final item = filtered[index];
-                            final isSelected = _selectedNews?.id == item.id;
-                            return ListTile(
-                              title: Text(item.title, style: const TextStyle(color: Colors.white)),
-                              subtitle: Text(item.id, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
-                              trailing: isSelected ? const Icon(Icons.check, color: Colors.greenAccent) : null,
-                              onTap: () => Navigator.pop(context, item),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-
-    if (selected != null) {
-      setState(() {
-        _selectedNews = selected;
-        _newsError = null;
-      });
+    try {
+      final res = await context.read<CookieRequest>().get(
+            'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/news/$id/json-data',
+          );
+      final title = res['title'] as String? ?? '';
+      setState(() => _newsPreview = title.isNotEmpty ? title : null);
+    } catch (_) {
+      setState(() => _newsPreview = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
+          content: Text('Berita tidak ditemukan. Coba periksa ID/URL.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedNews == null) {
+    final newsId = _extractNewsId(_newsIdController.text);
+    if (newsId == null || newsId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
-          content: Text('Pilih berita terkait terlebih dahulu.'),
+          content: Text('Masukkan ID/URL berita terkait.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -222,11 +117,10 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      final newsId = _extractNewsId(_newsIdController.text);
       final payload = jsonEncode({
         'title': _titleController.text.trim(),
         'body': _bodyController.text.trim(),
-        'news': _selectedNews!.id,
+        'news': newsId,
       });
 
       final response = await request.postJson(
@@ -343,53 +237,44 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
                       validator: (val) => (val == null || val.trim().isEmpty) ? 'Judul wajib diisi' : null,
                     ),
                     const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: _openNewsPicker,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: (_newsError != null)
-                                ? Colors.redAccent.withOpacity(0.6)
-                                : Colors.white.withOpacity(0.15),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _newsIdController,
+                            decoration: _inputDecoration('ID / URL Berita'),
+                            style: const TextStyle(color: Colors.white),
+                            validator: (val) => (val == null || val.trim().isEmpty) ? 'ID berita wajib diisi' : null,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.article_outlined, color: Colors.white70),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _selectedNews?.title ?? 'Pilih berita terkait...',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    _selectedNews?.id ?? (_loadingNews ? 'Memuat daftar berita...' : 'Tap untuk memilih'),
-                                    style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-                          ],
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.12),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: _validateNews,
+                          child: const Text('Validasi'),
+                        ),
+                      ],
+                    ),
+                    if (_newsPreview != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: Text(
+                          'Berita: $_newsPreview',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                         ),
                       ),
-                    ),
-                    if (_newsError != null) ...[
-                      const SizedBox(height: 6),
-                      Text(_newsError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
                     ],
                     const SizedBox(height: 16),
                     TextFormField(
