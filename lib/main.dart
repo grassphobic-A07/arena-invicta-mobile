@@ -182,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 radius: 1.2,
                 colors: [
                   Color(0xFF9333EA),
-                  Color(0xFF1A103C),
+                  Color(0xFF2A1B54),
                 ],
               ),
             ),
@@ -196,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 radius: 1.2,
                 colors: [
                   Color(0xFF4A49A0),
-                  Color(0xFF1A103C),
+                  Color(0xFF2A1B54),
                 ],
               ),
             ),
