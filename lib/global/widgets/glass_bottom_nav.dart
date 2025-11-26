@@ -70,6 +70,14 @@ class GlassBottomNavBar extends StatelessWidget {
               width: buttonSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFA855F7),
+                    Color(0xFF4F46E5),
+                  ],
+                ),
                 border: Border.all(
                   color: Colors.black,
                   width: 2.5,
@@ -82,44 +90,9 @@ class GlassBottomNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          center: Alignment.topLeft,
-                          radius: 0.9,
-                          colors: [
-                            Color(0xFFA855F7),
-                            Color(0xFF4F46E5),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          center: Alignment.bottomRight,
-                          radius: 0.9,
-                          colors: [
-                            Color(0xFF4F46E5),
-                            Color(0xFFA855F7),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Icon(
-                    Icons.grid_view_rounded,
-                    color: Colors.white,
-                  ),
-                ],
+              child: const Icon(
+                Icons.grid_view_rounded,
+                color: Colors.white,
               ),
             ),
           ),
