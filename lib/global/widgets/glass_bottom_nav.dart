@@ -74,8 +74,8 @@ class GlassBottomNavBar extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    ArenaColor.purpleX11,
-                    ArenaColor.dragonFruit,
+                    Color(0xFFA855F7),
+                    Color(0xFF4F46E5),
                   ],
                 ),
                 border: Border.all(
