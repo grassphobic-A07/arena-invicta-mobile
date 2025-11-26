@@ -78,6 +78,10 @@ class GlassBottomNavBar extends StatelessWidget {
                     ArenaColor.dragonFruit,
                   ],
                 ),
+                border: Border.all(
+                  color: Colors.black,
+                  width: 2.5,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: ArenaColor.purpleX11.withOpacity(0.6),
