@@ -212,6 +212,8 @@ class _LoginPageState extends State<LoginPage> {
                                         context,
                                       ).showSnackBar(
                                         const SnackBar(
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
                                           content: Text("Login Berhasil!"),
                                           backgroundColor: Colors.greenAccent,
                                         ),

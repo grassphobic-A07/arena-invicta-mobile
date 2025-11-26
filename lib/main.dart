@@ -223,6 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         Scaffold(
+          resizeToAvoidBottomInset: true,
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: AppBarTheme.of(context).backgroundColor,
