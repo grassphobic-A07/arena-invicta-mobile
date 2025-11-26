@@ -4,6 +4,7 @@ import 'package:arena_invicta_mobile/global/widgets/offline_overlay.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
+import 'package:arena_invicta_mobile/global/screens/discussions_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
@@ -127,6 +128,7 @@ class MyApp extends StatelessWidget {
           LoginPage.routeName: (context) => const LoginPage(),
           RegisterPage.routeName: (context) => const RegisterPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
+          DiscussionsPage.routeName: (context) => const DiscussionsPage(),
         },
         
         // --- BAGIAN PENTING: BUNGKUS SEMUA HALAMAN DI SINI ---
@@ -167,6 +169,23 @@ class MyHomePage extends StatefulWidget {
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 class _MyHomePageState extends State<MyHomePage> {
+  void _handleNavTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        // Already on home.
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, DiscussionsPage.routeName);
+        break;
+      case 2:
+        // Placeholder for stats.
+        break;
+      case 3:
+        // Placeholder for profile.
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
@@ -280,7 +299,11 @@ class _MyHomePageState extends State<MyHomePage> {
           left: 0,
           right: 0,
           bottom: 0,
-          child: const GlassBottomNavBar(),
+          child: GlassBottomNavBar(
+            activeIndex: 0,
+            onItemTap: (index) => _handleNavTap(context, index),
+            onCenterTap: () {},
+          ),
         ),
       ],
     );
