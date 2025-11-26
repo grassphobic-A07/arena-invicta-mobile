@@ -4,7 +4,7 @@ import 'package:arena_invicta_mobile/global/widgets/offline_overlay.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
-import 'package:arena_invicta_mobile/global/screens/discussions_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
