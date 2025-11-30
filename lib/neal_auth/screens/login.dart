@@ -175,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                                 // Contoh: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/auth/login/"
                                 try {
                                   final response = await request.login(
-                                    "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/login/",
+                                    "http://localhost:8000/accounts/api/login/", // TODO: INI JG JANLUP DIUBAH
                                     {
                                       'username': _usernameController.text,
                                       'password': _passwordController.text,

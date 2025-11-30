@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
 
   // --- LOGIKA FETCH & PISAHKAN DATA ---
   Future<Map<String, List<NewsEntry>>> fetchHomeNews(CookieRequest request) async {
-    String url = 'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/show-news-json';
+    String url = 'http://localhost:8000/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
     
     if (activeCategory != "All") {
       url += '?filter=${activeCategory.toLowerCase()}';
