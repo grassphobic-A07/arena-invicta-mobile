@@ -9,12 +9,12 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; // WIDGET HEADER
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; // WIDGET NAVBAR
 
-// Import Drawer agar bisa dipasang di halaman ini
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart'; 
-
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
-import 'package:arena_invicta_mobile/main.dart'; // Akses UserProvider & HomeNewsCard
+import 'package:arena_invicta_mobile/main.dart';
+import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart';
+import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart';
 
 class NewsEntryListPage extends StatefulWidget {
   static const String routeName = '/news-entry-list';
@@ -76,20 +76,42 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
     // Logic Role Text untuk Drawer
     String roleText = "Guest";
     if (userProvider.isLoggedIn) {
-      if (userProvider.role == UserRole.admin) roleText = "Admin";
-      else if (userProvider.role == UserRole.staff) roleText = "Writer";
-      else roleText = "Member";
+      if (userProvider.role == UserRole.admin){
+        roleText = "Admin";
+      }
+      else if (userProvider.role == UserRole.staff) {
+        roleText = "Writer";
+      } 
+      else {
+        roleText = "Member";
+      }
     }
 
     return Scaffold(
-      // 2. PASANG KEY DAN DRAWER DI SINI
       key: _scaffoldKey,
       drawer: ArenaInvictaDrawer(
         userProvider: userProvider,
-        roleText: roleText,
+        roleText: roleText, 
       ),
       backgroundColor: ArenaColor.darkAmethyst,
       resizeToAvoidBottomInset: false, 
+
+      // --- TOMBOL TAMBAH BERITA (HANYA STAFF/ADMIN) ---
+      floatingActionButton: (userProvider.isLoggedIn && (userProvider.role == UserRole.staff || userProvider.role == UserRole.admin))
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 80.0), // Naikkan dikit biar gak ketutup navbar
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NewsFormPage()),
+                  );
+                },
+                backgroundColor: ArenaColor.dragonFruit,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
+            )
+          : null,
       body: Stack(
         children: [
           // 1. BACKGROUND GLOWS
@@ -195,19 +217,15 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                             final news = snapshot.data![index];
                             return Column(
                               children: [
-                                GestureDetector(
+                                // PANGGIL WIDGET DARI FILE BARU
+                                NewsEntryCard(
+                                  news: news, // Kirim object news utuh
                                   onTap: () {
                                     Navigator.push(
                                       context, 
                                       MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))
                                     );
                                   },
-                                  child: HomeNewsCard(
-                                    title: news.title,
-                                    subtitle: "${news.newsViews} Views • ${news.author}",
-                                    tag: news.sports,
-                                    imageUrl: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}",
-                                  ),
                                 ),
                                 const SizedBox(height: 32),
                               ],

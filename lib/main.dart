@@ -7,8 +7,8 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 // --- IMPORTS MODUL ---
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/screens/splash_screen.dart';
-import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; // WIDGET HEADER
-import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; // WIDGET NAVBAR
+import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; 
+import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; 
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
@@ -18,6 +18,8 @@ import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
+import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart'; 
+import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -78,8 +80,8 @@ class _HomePageState extends State<HomePage> {
   String activeCategory = "All";
   final List<String> categories = ["All", "Football", "Basketball", "Tennis", "Volleyball", "Motogp"];
 
-  // --- FUNGSI FETCH NEWS DARI DJANGO ---
-  Future<List<NewsEntry>> fetchHomeNews(CookieRequest request) async {
+  // --- LOGIKA FETCH & PISAHKAN DATA ---
+  Future<Map<String, List<NewsEntry>>> fetchHomeNews(CookieRequest request) async {
     String url = 'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/show-news-json';
     
     if (activeCategory != "All") {
@@ -88,34 +90,99 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await request.get(url);
-      List<NewsEntry> listNews = [];
+      List<NewsEntry> allNews = [];
       for (var d in response) {
-        if (d != null) {
-          listNews.add(NewsEntry.fromJson(d));
-        }
+        if (d != null) allNews.add(NewsEntry.fromJson(d));
       }
 
-      // Sort by Views Tertinggi -> Ambil 5 Teratas
-      listNews.sort((a, b) => b.newsViews.compareTo(a.newsViews));
-      return listNews.take(5).toList(); 
+      // 1. CAROUSEL DATA
+      List<NewsEntry> carouselList = allNews.where((n) => n.isFeatured).toList();
+      if (carouselList.length < 3) {
+         allNews.sort((a, b) => b.newsViews.compareTo(a.newsViews)); 
+         for (var news in allNews) {
+           if (!carouselList.contains(news) && carouselList.length < 5) {
+             carouselList.add(news);
+           }
+         }
+      }
+      carouselList = carouselList.take(5).toList();
+
+      // 2. LIST DATA
+      List<NewsEntry> trendingList = List.from(allNews);
+      trendingList.sort((a, b) => b.newsViews.compareTo(a.newsViews));
+      trendingList.removeWhere((news) => carouselList.any((c) => c.id == news.id));
+      trendingList = trendingList.take(5).toList();
+
+      return {
+        'carousel': carouselList,
+        'trending': trendingList,
+      };
       
     } catch (e) {
       debugPrint("Error fetching news: $e");
-      return [];
+      return {'carousel': [], 'trending': []};
     }
   }
 
   Widget _buildGlowCircle(Color color) {
     return Container(
-      width: 300,
-      height: 300,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2), 
-        shape: BoxShape.circle,
+      width: 300, height: 300,
+      decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+      child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: Container(color: Colors.transparent)),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      child: Text(
+        title,
+        style: GoogleFonts.outfit(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-        child: Container(color: Colors.transparent),
+    );
+  }
+
+  Widget _buildDiscussionCard({required String title, required String topic, required String count, required String imageUrl}) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ArenaColor.darkAmethystLight.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              imageUrl,
+              width: 60, height: 60, fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(width: 60, height: 60, color: Colors.grey.withOpacity(0.2)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 4),
+                Text(topic, style: TextStyle(color: Colors.white54, fontSize: 12)),
+              ],
+            ),
+          ),
+          Column(
+            children: [
+              const Icon(Icons.keyboard_arrow_up_rounded, color: ArenaColor.dragonFruit),
+              Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+            ],
+          )
+        ],
       ),
     );
   }
@@ -129,11 +196,7 @@ class _HomePageState extends State<HomePage> {
       key: _scaffoldKey, 
       backgroundColor: ArenaColor.darkAmethyst,
       resizeToAvoidBottomInset: false,
-      
-      drawer: ArenaInvictaDrawer(
-        userProvider: userProvider,
-        roleText: "", 
-      ),
+      drawer: ArenaInvictaDrawer(userProvider: userProvider, roleText: ""),
 
       body: Stack(
         children: [
@@ -144,288 +207,177 @@ class _HomePageState extends State<HomePage> {
           // 2. MAIN CONTENT
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 110, 24, 120), 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- CATEGORIES CHIPS (FIXED: MATCHING NEWS LIST STYLE) ---
-                  SizedBox(
-                    height: 45,
-                    child: Center(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: categories.map((cat) {
-                            final isAll = cat == "All";
-                            
-                            // Di Home, tombol tidak aktif secara visual (selalu style default)
-                            // karena fungsinya navigasi.
-                            
-                            return GestureDetector(
-                              onTap: () {
-                                if (isAll) {
-                                  Navigator.pushNamed(context, NewsEntryListPage.routeName);
-                                } else {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => NewsEntryListPage(
-                                        initialCategory: cat.toLowerCase(),
+              padding: const EdgeInsets.only(top: 110, bottom: 120), 
+              child: FutureBuilder<Map<String, List<NewsEntry>>>(
+                future: fetchHomeNews(request),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: Padding(padding: EdgeInsets.only(top: 100), child: CircularProgressIndicator(color: ArenaColor.dragonFruit)));
+                  }
+                  
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.white54)));
+                  }
+
+                  final carouselData = snapshot.data?['carousel'] ?? [];
+                  final trendingData = snapshot.data?['trending'] ?? [];
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      
+                      // --- A. CAROUSEL SECTION ---
+                      SizedBox(
+                        height: 200, // Tinggi Area Carousel
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                             Positioned(
+                               top: -60,
+                               left: 0, 
+                               right: 0,
+                               height: 250,
+                               child: carouselData.isNotEmpty
+                                  ? HotNewsCarousel(newsList: carouselData)
+                                  : Container(
+                                      color: const Color(0xFF4A49A0),
+                                      child: const Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.newspaper_rounded, color: Colors.white54, size: 40),
+                                            SizedBox(height: 8),
+                                            Text("No highlights", style: TextStyle(color: Colors.white54)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                             ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+
+                      // --- B. SPORTS CHIPS ---
+                      SizedBox(
+                        height: 45,
+                        child: Center(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            clipBehavior: Clip.none, 
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(width: 25), 
+                                ...categories.map((cat) {
+                                  final isAll = cat == "All";
+                                  final isActive = activeCategory == cat;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 12), 
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (isAll) {
+                                          Navigator.pushNamed(context, NewsEntryListPage.routeName);
+                                        } else {
+                                          setState(() => activeCategory = cat);
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: (isActive && !isAll) 
+                                              ? ArenaColor.purpleX11 
+                                              : ArenaColor.darkAmethystLight.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(100),
+                                          border: Border.all(
+                                            color: (isActive && !isAll) 
+                                                ? ArenaColor.purpleX11 
+                                                : Colors.white.withOpacity(0.1)
+                                          ),
+                                        ),
+                                        child: Text(
+                                          cat,
+                                          style: GoogleFonts.outfit(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   );
-                                }
-                              },
-                              child: Container(
-                                // GUNAKAN MARGIN SIMETRIS (Kiri 6, Kanan 6)
-                                // Ini menghapus jarak lebar 25px di awal yang bikin terpotong
-                                margin: const EdgeInsets.symmetric(horizontal: 6), 
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: ArenaColor.darkAmethystLight.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.1),
-                                  ),
-                                ),
-                                child: Text(
-                                  cat,
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // --- 3. DYNAMIC BIG NEWS CARDS ---
-                  FutureBuilder<List<NewsEntry>>(
-                    future: fetchHomeNews(request),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 50.0),
-                            child: CircularProgressIndicator(color: ArenaColor.dragonFruit),
-                          ),
-                        );
-                      } else if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            "Failed to load news.\nError: ${snapshot.error}", 
-                            style: const TextStyle(color: Colors.white54),
-                            textAlign: TextAlign.center,
-                          )
-                        );
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 50.0),
-                            child: Text(
-                              "Belum ada berita populer saat ini.", 
-                              style: TextStyle(color: Colors.white54)
+                                }).toList(),
+                              ],
                             ),
                           ),
-                        );
-                      } else {
-                        // DATA SUKSES
-                        return Column(
-                          children: snapshot.data!.map((news) {
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // --- C. LIST SECTION (TRENDING NEWS) ---
+                      _buildSectionTitle("Trending News"),
+
+                      if (trendingData.isNotEmpty) ...[
+                        Column(
+                          children: trendingData.map((news) {
                             return Column(
                               children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => NewsDetailPage(news: news),
-                                      ),
-                                    );
-                                  },
-                                  child: HomeNewsCard(
-                                    title: news.title,
-                                    subtitle: "${news.newsViews} Views • ${news.author}", 
-                                    tag: news.sports,
-                                    imageUrl: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}",
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                  child: NewsEntryCard(
+                                    news: news,
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))),
                                   ),
                                 ),
-                                const SizedBox(height: 32),
+                                const SizedBox(height: 24),
                               ],
                             );
                           }).toList(),
-                        );
-                      }
-                    },
-                  ),
-                  
-                  const SizedBox(height: 80),
-                ],
-              ),
-            ),
-          ),
+                        )
+                      ] else ...[
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Center(
+                            child: Text("Belum ada berita trending lainnya.", style: TextStyle(color: Colors.white38)),
+                          ),
+                        )
+                      ],
 
-          // 3. HEADER (Glassy)
-          GlassyHeader(
-            userProvider: userProvider,
-            scaffoldKey: _scaffoldKey,
-            isHome: true, // Burger Menu
-            title: "Arena Invicta",
-          ),
+                      // --- D. DISCUSSIONS SECTION ---
+                      const SizedBox(height: 16),
+                      _buildSectionTitle("Hot Discussions"),
 
-          // 4. NAVBAR (Glassy)
-          GlassyNavbar(
-            userProvider: userProvider,
-            fabIcon: Icons.grid_view_rounded, // Icon 4 Kotak
-            onFabTap: () {
-              // Reset Filter
-              setState(() {
-                activeCategory = "All";
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// --- WIDGET HOME NEWS CARD (FINAL FIXED VERSION) ---
-class HomeNewsCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String tag;
-  final String imageUrl;
-
-  const HomeNewsCard({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.tag,
-    required this.imageUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 220,
-      width: double.infinity,
-      // 1. CONTAINER LUAR: HANYA UNTUK SHADOW
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        color: ArenaColor.darkAmethyst,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      // 2. CLIPRRRECT: MEMOTONG GAMBAR
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: Stack(
-          children: [
-            // A. GAMBAR BACKGROUND
-            Positioned.fill(
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: ArenaColor.darkAmethystLight,
-                    child: const Center(
-                      child: Icon(
-                        Icons.broken_image_rounded, 
-                        color: Colors.white24, 
-                        size: 50,
-                      ),
-                    ),
+                      _buildDiscussionCard(title: "Kenapa Bumi Bulat?", topic: "Sains", count: "70", imageUrl: "https://i.pinimg.com/736x/8f/c3/97/8fc397664421896796c00329062363b9.jpg"),
+                      _buildDiscussionCard(title: "Kenapa MC Kotak?", topic: "Gaming", count: "69", imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_86t8XwZqjQRuuvqW_rbVd8QyqHn8lR2YgA&s"),
+                      
+                      const SizedBox(height: 80),
+                    ],
                   );
                 },
               ),
             ),
+          ),
 
-            // B. GRADIENT OVERLAY
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      ArenaColor.darkAmethyst.withOpacity(0.9),
-                    ],
-                    stops: const [0.4, 1.0],
-                  ),
-                ),
-              ),
-            ),
-
-            // C. KONTEN TEKS & TAG
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: ArenaColor.dragonFruit.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: ArenaColor.dragonFruit.withOpacity(0.8)),
-                    ),
-                    child: Text(
-                      tag,
-                      style: GoogleFonts.outfit(
-                        color: ArenaColor.dragonFruit,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          // 3. HEADER & NAVBAR
+          GlassyHeader(userProvider: userProvider, scaffoldKey: _scaffoldKey, isHome: true, title: "Arena Invicta"),
+          GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () => setState(() => activeCategory = "All")),
+        ],
       ),
     );
   }
 }
 
-// --- PROVIDER ---
+// --- PROVIDER DI DALAM MAIN.DART ---
+// Ini agar kamu tidak perlu file provider terpisah
 enum UserRole { registered, staff, admin }
 
 class UserProvider extends ChangeNotifier {
