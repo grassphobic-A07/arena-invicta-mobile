@@ -2,7 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
-import 'package:arena_invicta_mobile/main.dart'; // Untuk UserProvider
+import 'package:arena_invicta_mobile/main.dart';
+import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
 
 class GlassyNavbar extends StatelessWidget {
   final UserProvider userProvider;
@@ -67,7 +68,16 @@ class GlassyNavbar extends StatelessWidget {
 
                 IconButton(
                   tooltip: "Discussions",
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Forum Coming Soon!"))),
+                  onPressed: () {
+                    // OPSI A: Jika DiscussionsPage punya static const routeName
+                    // Navigator.pushNamed(context, DiscussionsPage.routeName);
+                    
+                    // OPSI B: Navigasi langsung (Paling aman jika route belum didaftarkan di main.dart)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const DiscussionsPage()),
+                    );
+                  },
                   icon: const Icon(Icons.forum_rounded, color: Colors.white54),
                 ),
 

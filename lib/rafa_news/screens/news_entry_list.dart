@@ -8,13 +8,14 @@ import 'package:provider/provider.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; 
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; 
+import 'package:arena_invicta_mobile/global/environments.dart';
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart'; 
 import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart'; // Untuk tombol + (create)
 
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
-import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_tile.dart'; // PENTING: Pake Tile, bukan Card
+import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_tile.dart'; 
 import 'package:arena_invicta_mobile/main.dart'; 
 
 class NewsEntryListPage extends StatefulWidget {
@@ -42,7 +43,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
   }
 
   Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
-    String url = 'http://localhost:8000/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
+    String url = '$baseUrl/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
     if (_selectedSport != "All") {
       url += '?filter=${_selectedSport.toLowerCase()}';
     }
@@ -152,8 +153,8 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                                     ),
                                     child: Text(
                                       sport == "All" ? "All" : sport[0].toUpperCase() + sport.substring(1),
-                                      style: GoogleFonts.outfit(
-                                        color: isSelected ? ArenaColor.dragonFruit : Colors.white,
+                                      style: GoogleFonts.poppins(
+                                        color: isSelected ? Colors.white.withOpacity(0.8) : Colors.white,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),

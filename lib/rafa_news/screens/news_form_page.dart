@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 class NewsFormPage extends StatefulWidget {
   static const String routeName = '/create-news';
 
@@ -53,7 +53,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
       try {
         // Endpoint Django
         final response = await request.post(
-          "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/create-news-ajax",
+          "$baseUrl/create-news-ajax",
           {
             'title': _title,
             'content': _content,
@@ -126,7 +126,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
         ),
         title: Text(
           "Create News",
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(

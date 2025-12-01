@@ -1,7 +1,5 @@
 import 'dart:convert';
-
-import 'dart:convert';
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +61,7 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
 
     try {
       final res = await context.read<CookieRequest>().get(
-            'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/news/$id/json-data',
+            '$baseUrl/news/$id/json-data', // TODO: 
           );
       final title = res['title'] as String? ?? '';
       setState(() => _newsPreview = title.isNotEmpty ? title : null);
@@ -124,7 +122,7 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
       });
 
       final response = await request.postJson(
-        'https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/discussions/api/threads/create/',
+        '$baseUrl/discussions/api/threads/create/',
         payload,
       );
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart'; // Import Model
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 class NewsEntryCard extends StatelessWidget {
   final NewsEntry news; 
   final VoidCallback onTap;
@@ -15,7 +15,6 @@ class NewsEntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String baseUrl = "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id";
     final String proxyUrl = "$baseUrl/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
 
     return GestureDetector(
@@ -94,7 +93,7 @@ class NewsEntryCard extends StatelessWidget {
                       ),
                       child: Text(
                         news.sports, // Ambil dari object news
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.poppins(
                           color: ArenaColor.dragonFruit,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -105,7 +104,7 @@ class NewsEntryCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       news.title, // Ambil dari object news
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
