@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 // ========== Warna Tema Arena Invicta ==========
 class ArenaColor {
-  static const Color darkAmethyst = Color(0xFF1A103C);
-  static const Color darkAmethystLight = Color(0xFF2A1B54);
+  static const Color darkAmethyst = Color(0xFF2A1B54);
+  static const Color darkAmethystLight = Color(0xCC4A49A0);
   static const Color purpleX11 = Color(0xFF9333EA);     // Warna Utama (Primary)
   static const Color dragonFruit = Color(0xFFEC4899);   // Warna Aksen (Secondary)
   static const Color evergreen = Color(0xFF062726);

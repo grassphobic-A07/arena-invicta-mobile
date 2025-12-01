@@ -223,7 +223,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 try {
                                   // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
                                   final response = await request.post(
-                                    "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/register/",
+                                    "http://localhost:8000/accounts/api/register/", // TODO: JANLUP GANTI LAGI KE "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/register/"
                                     {
                                       'username': _usernameController.text,
                                       'password': _passwordController.text,
