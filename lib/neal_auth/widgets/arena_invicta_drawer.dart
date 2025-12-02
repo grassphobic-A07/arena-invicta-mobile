@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/admin_dashboard.dart';
@@ -133,7 +134,7 @@ class ArenaInvictaDrawer extends StatelessWidget {
               onTap: () async {
                 final request = context.read<CookieRequest>();
 
-                  final response = await request.logout("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/logout/");
+                  final response = await request.logout("$baseUrl/accounts/api/logout/");
                   if (context.mounted) {
                       context.read<UserProvider>().logout();
                       

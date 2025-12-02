@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 class NewsEntryTile extends StatelessWidget {
   final NewsEntry news;
   final VoidCallback onTap;
@@ -16,7 +16,6 @@ class NewsEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Proxy URL Logic (Sama seperti sebelumnya)
-    const String baseUrl = "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id";
     final String proxyUrl = "$baseUrl/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
 
     return GestureDetector(
@@ -67,7 +66,7 @@ class NewsEntryTile extends StatelessWidget {
                     ),
                     child: Text(
                       news.sports.toUpperCase(),
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.poppins(
                         color: ArenaColor.dragonFruit,
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
@@ -83,7 +82,7 @@ class NewsEntryTile extends StatelessWidget {
                     news.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

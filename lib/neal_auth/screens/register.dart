@@ -1,3 +1,4 @@
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:flutter/material.dart';
@@ -223,7 +224,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 try {
                                   // LOGIKA LOGIN SAMA SEPERTI SEBELUMNYA
                                   final response = await request.post(
-                                    "http://localhost:8000/accounts/api/register/", // TODO: JANLUP GANTI LAGI KE "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/register/"
+                                    "$baseUrl/accounts/api/register/", // TODO: JANLUP GANTI LAGI KE "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/register/"
                                     {
                                       'username': _usernameController.text,
                                       'password': _passwordController.text,

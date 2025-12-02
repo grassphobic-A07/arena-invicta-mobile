@@ -2,7 +2,7 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 class NewsDetailPage extends StatelessWidget {
   final NewsEntry news;
 
@@ -11,7 +11,6 @@ class NewsDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // URL Proxy Config (Sama seperti di card)
-    const String baseUrl = "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id";
     final String proxyUrl = "$baseUrl/news/image-proxy/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
 
     return Scaffold(
@@ -107,7 +106,7 @@ class NewsDetailPage extends StatelessWidget {
 
                   Text(
                     news.title,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,

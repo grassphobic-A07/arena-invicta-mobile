@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 class HotNewsCarousel extends StatefulWidget {
   final List<NewsEntry> newsList;
 
@@ -28,7 +28,6 @@ class _HotNewsCarouselState extends State<HotNewsCarousel> {
           final news = widget.newsList[index];
           
           // Proxy URL for image
-          const String baseUrl = "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id";
           final String proxyUrl = "$baseUrl/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
 
           return GestureDetector(
@@ -88,7 +87,7 @@ class _HotNewsCarouselState extends State<HotNewsCarousel> {
                         ),
                         child: Text(
                           news.sports,
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -99,7 +98,7 @@ class _HotNewsCarouselState extends State<HotNewsCarousel> {
                       // News Title
                       Text(
                         news.title,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 28,
                           fontWeight: FontWeight.bold,

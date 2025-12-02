@@ -1,3 +1,4 @@
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
@@ -175,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                                 // Contoh: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/auth/login/"
                                 try {
                                   final response = await request.login(
-                                    "http://localhost:8000/accounts/api/login/", // TODO: INI JG JANLUP DIUBAH
+                                    "$baseUrl/accounts/api/login/", // TODO: INI JG JANLUP DIUBAH
                                     {
                                       'username': _usernameController.text,
                                       'password': _passwordController.text,

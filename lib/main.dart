@@ -9,6 +9,7 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/screens/splash_screen.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; 
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; 
+import 'package:arena_invicta_mobile/global/environments.dart'; 
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
@@ -83,7 +84,7 @@ class _HomePageState extends State<HomePage> {
 
   // --- LOGIKA FETCH & PISAHKAN DATA ---
   Future<Map<String, List<NewsEntry>>> fetchHomeNews(CookieRequest request) async {
-    String url = 'http://localhost:8000/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
+    String url = '$baseUrl/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
     
     if (activeCategory != "All") {
       url += '?filter=${activeCategory.toLowerCase()}';
@@ -138,7 +139,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Text(
         title,
-        style: GoogleFonts.outfit(
+        style: GoogleFonts.poppins(
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.bold,
@@ -171,7 +172,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(title, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
                 Text(topic, style: TextStyle(color: Colors.white54, fontSize: 12)),
               ],
@@ -300,7 +301,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         child: Text(
                                           cat,
-                                          style: GoogleFonts.outfit(
+                                          style: GoogleFonts.poppins(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,

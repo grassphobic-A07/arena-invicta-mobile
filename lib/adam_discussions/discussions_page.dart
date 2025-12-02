@@ -1,11 +1,15 @@
-import 'package:arena_invicta_mobile/adam_discussions/create_discussion_page.dart';
-import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/global/widgets/glass_bottom_nav.dart';
-import 'package:arena_invicta_mobile/main.dart';
-import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+
+// --- IMPORTS ---
+import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; // GUNAKAN NAVBAR GLOBAL
+import 'package:arena_invicta_mobile/global/environments.dart'; // Gunakan baseUrl
+
+import 'package:arena_invicta_mobile/adam_discussions/create_discussion_page.dart';
+import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
+import 'package:arena_invicta_mobile/main.dart'; // Untuk UserProvider
 
 class DiscussionsPage extends StatefulWidget {
   const DiscussionsPage({super.key});
@@ -33,7 +37,7 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
+          margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16), // Naikkan margin agar tidak ketutup navbar
           content: const Text('Silakan login untuk membuat diskusi.'),
           action: SnackBarAction(
             label: 'Login',
@@ -57,7 +61,8 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
   Future<void> _fetchThreads() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/discussions/api/threads/");
+      // Gunakan baseUrl agar konsisten
+      final response = await request.get("$baseUrl/discussions/api/threads/");
       final rawThreads = (response['threads'] as List<dynamic>? ?? []);
       setState(() {
         _threads = rawThreads.map((json) => DiscussionThread.fromJson(json as Map<String, dynamic>)).toList();
@@ -72,124 +77,133 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
     }
   }
 
-  void _handleNavTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, MyApp.routeName);
-        break;
-      case 1:
-        // Already here.
-        break;
-      case 2:
-        // Placeholder for analytics/stats tab.
-        break;
-      case 3:
-        // Placeholder for profile tab.
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.topLeft,
-                radius: 1.2,
-                colors: [
-                  Color(0xFF9333EA),
-                  Color(0xFF2A1B54),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.bottomRight,
-                radius: 1.2,
-                colors: [
-                  Color(0xFF4A49A0),
-                  Color(0xFF2A1B54),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: const Text('Discussions'),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {},
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, LoginPage.routeName),
-                icon: const Icon(Icons.login, color: Colors.white),
-                label: const Text(
-                  'Login',
-                  style: TextStyle(color: Colors.white),
+    final userProvider = context.watch<UserProvider>();
+
+    return Scaffold(
+      // Background Gradient (Langsung di Scaffold body atau Stack paling bawah)
+      backgroundColor: ArenaColor.darkAmethyst, 
+      body: Stack(
+        children: [
+          // 1. BACKGROUND GRADIENT (Sesuai style diskusi sebelumnya)
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topLeft,
+                  radius: 1.2,
+                  colors: [
+                    Color(0xFF9333EA),
+                    Color(0xFF2A1B54),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-          body: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _fetchThreads,
-              child: ListView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
-                children: [
-                  _HeroCard(
-                    title: 'Mulai Diskusi Baru',
-                    subtitle: 'Bagikan opini, analisis taktik, atau tanya komunitas.',
-                    ctaLabel: 'Tulis Diskusi',
-                    onTap: _openCreate,
-                  ),
-                  const SizedBox(height: 12),
-                  _FilterChips(
-                    filters: const ['Semua', 'Trending', 'Belum Terjawab', 'Favorit'],
-                    onSelected: (_) {},
-                  ),
-                  const SizedBox(height: 12),
-                  if (_isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 80),
-                      child: Center(child: CircularProgressIndicator(color: ArenaColor.purpleX11)),
-                    )
-                  else if (_error != null)
-                    _ErrorCard(message: _error!, onRetry: _fetchThreads)
-                  else if (_threads.isEmpty)
-                    const _EmptyState()
-                  else ..._threads.map((t) => _ThreadCard(thread: t)),
-                ],
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.bottomRight,
+                  radius: 1.2,
+                  colors: [
+                    Color(0xFF4A49A0),
+                    Color(0xFF2A1B54),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: GlassBottomNavBar(
-            activeIndex: 1,
-            onItemTap: (index) => _handleNavTap(context, index),
-            onCenterTap: () {},
+
+          // 2. MAIN CONTENT (SCROLLABLE)
+          Positioned.fill(
+            child: Column(
+              children: [
+                // AppBar Manual (Agar transparan)
+                AppBar(
+                  title: const Text('Discussions'),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                    onPressed: () => Navigator.pop(context), // Kembali ke halaman sebelumnya
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () {},
+                    ),
+                    if (!userProvider.isLoggedIn)
+                      TextButton.icon(
+                        onPressed: () => Navigator.pushNamed(context, LoginPage.routeName),
+                        icon: const Icon(Icons.login, color: Colors.white),
+                        label: const Text(
+                          'Login',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+
+                // List Content
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _fetchThreads,
+                    child: ListView(
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      // Padding bawah besar agar tidak tertutup Glassy Navbar
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                      children: [
+                        _HeroCard(
+                          title: 'Mulai Diskusi Baru',
+                          subtitle: 'Bagikan opini, analisis taktik, atau tanya komunitas.',
+                          ctaLabel: 'Tulis Diskusi',
+                          onTap: _openCreate,
+                        ),
+                        const SizedBox(height: 12),
+                        _FilterChips(
+                          filters: const ['Semua', 'Trending', 'Belum Terjawab', 'Favorit'],
+                          onSelected: (_) {},
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        if (_isLoading)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 80),
+                            child: Center(child: CircularProgressIndicator(color: ArenaColor.purpleX11)),
+                          )
+                        else if (_error != null)
+                          _ErrorCard(message: _error!, onRetry: _fetchThreads)
+                        else if (_threads.isEmpty)
+                          const _EmptyState()
+                        else 
+                          ..._threads.map((t) => _ThreadCard(thread: t)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+
+          // 3. GLASSY NAVBAR (GLOBAL)
+          GlassyNavbar(
+            userProvider: userProvider,
+            // Ikon tengah di Discussions bisa digunakan untuk Refresh atau Kembali ke Home
+            fabIcon: Icons.grid_view_rounded, 
+            onFabTap: () {
+              // Jika user ingin kembali ke Home dari halaman diskusi
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
+
+// --- WIDGETS PENDUKUNG (TETAP SAMA) ---
 
 class _HeroCard extends StatelessWidget {
   const _HeroCard({
@@ -325,9 +339,9 @@ class _ThreadCard extends StatelessWidget {
                 height: 36,
                 width: 36,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [Color(0xFF9333EA), Color(0xFF4F46E5)],
