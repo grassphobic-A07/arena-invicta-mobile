@@ -71,10 +71,18 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
       return;
     }
 
+    // Optimistic UI update
+    final previousUpvoted = _userHasUpvoted;
+    final previousCount = _upvoteCount;
+    setState(() {
+      _userHasUpvoted = !_userHasUpvoted;
+      _upvoteCount += _userHasUpvoted ? 1 : -1;
+    });
+
     final request = context.read<CookieRequest>();
     try {
       final response = await request.post(
-        '$baseUrl/discussions/threads/${widget.thread.id}/upvote/',
+        '$baseUrl/discussions/api/threads/${widget.thread.id}/upvote/',
         {},
       );
       if (response['ok'] == true) {
@@ -82,16 +90,29 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
           _userHasUpvoted = response['state'] == 'added';
           _upvoteCount = response['upvote_count'] ?? _upvoteCount;
         });
+      } else {
+        // Revert on failure
+        setState(() {
+          _userHasUpvoted = previousUpvoted;
+          _upvoteCount = previousCount;
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
-          content: Text('Error: $e'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      // Revert on error
+      setState(() {
+        _userHasUpvoted = previousUpvoted;
+        _upvoteCount = previousCount;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+            content: Text('Gagal memperbarui upvote: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
