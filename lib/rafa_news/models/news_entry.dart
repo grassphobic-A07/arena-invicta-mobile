@@ -51,13 +51,15 @@ class NewsEntry {
 
     factory NewsEntry.fromJson(Map<String, dynamic> json) => NewsEntry(
         id: json["id"],
-        title: json["title"],
-        content: json["content"],
-        author: json["author"],
-        createdAt: DateTime.parse(json["created_at"]),
-        category: json["category"],
-        sports: json["sports"],
-        thumbnail: json["thumbnail"] ?? "", // Tambahkan null safety
+        title: json["title"] ?? "",
+        content: json["content"] ?? "",
+        author: json["author"] ?? "Unknown",
+        createdAt: json["created_at"] != null 
+            ? DateTime.parse(json["created_at"]) 
+            : DateTime.now(),
+        category: json["category"] ?? "",
+        sports: json["sports"] ?? "",
+        thumbnail: json["thumbnail"] ?? "",
         newsViews: json["news_views"] ?? 0,
         isFeatured: json["is_featured"] ?? false,
     );
