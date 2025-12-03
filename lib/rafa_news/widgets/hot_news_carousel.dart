@@ -1,9 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
+
 class HotNewsCarousel extends StatefulWidget {
   final List<NewsEntry> newsList;
 
@@ -14,13 +16,12 @@ class HotNewsCarousel extends StatefulWidget {
 }
 
 class _HotNewsCarouselState extends State<HotNewsCarousel> {
-  // viewportFraction: 1.0 so one image fills the screen width
   final PageController _pageController = PageController(viewportFraction: 1.0);
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 250, // Fixed height for the hero carousel area
+      height: 250,
       child: PageView.builder(
         controller: _pageController,
         itemCount: widget.newsList.length,
@@ -56,7 +57,7 @@ class _HotNewsCarouselState extends State<HotNewsCarousel> {
                   },
                 ),
                 
-                // 2. Gradient Overlay (To make text readable)
+                // 2. Gradient Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -78,23 +79,32 @@ class _HotNewsCarouselState extends State<HotNewsCarousel> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Category Chip
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: ArenaColor.dragonFruit,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          news.sports,
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: ArenaColor.dragonFruit.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+                            ),
+                            child: Text(
+                              news.sports,
+                              style: GoogleFonts.poppins( 
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 8),
+                      
                       // News Title
                       Text(
                         news.title,

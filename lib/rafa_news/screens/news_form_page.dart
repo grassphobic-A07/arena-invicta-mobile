@@ -1,13 +1,18 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/global/environments.dart';
+import 'package:arena_invicta_mobile/global/environments.dart'; 
+import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart'; 
+
 class NewsFormPage extends StatefulWidget {
   static const String routeName = '/create-news';
+  final NewsEntry? newsToEdit; 
 
-  const NewsFormPage({super.key});
+  const NewsFormPage({super.key, this.newsToEdit});
 
   @override
   State<NewsFormPage> createState() => _NewsFormPageState();
@@ -42,7 +47,19 @@ class _NewsFormPageState extends State<NewsFormPage> {
     {'value': 'match', 'label': 'Match'},
   ];
 
-  // --- Fungsi Submit ---
+  @override
+  void initState() {
+    super.initState();
+    if (widget.newsToEdit != null) {
+      _title = widget.newsToEdit!.title;
+      _content = widget.newsToEdit!.content;
+      _thumbnail = widget.newsToEdit!.thumbnail ?? "";
+      _selectedSport = widget.newsToEdit!.sports.toLowerCase(); 
+      _selectedCategory = widget.newsToEdit!.category.toLowerCase();
+      _isFeatured = widget.newsToEdit!.isFeatured;
+    }
+  }
+
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -51,9 +68,15 @@ class _NewsFormPageState extends State<NewsFormPage> {
       final request = context.read<CookieRequest>();
 
       try {
-        // Endpoint Django
+        String url;
+        if (widget.newsToEdit != null) {
+          url = "$baseUrl/news/${widget.newsToEdit!.id}/edit_news_ajax";
+        } else {
+          url = "$baseUrl/create-news-ajax";
+        }
+
         final response = await request.post(
-          "$baseUrl/create-news-ajax",
+          url,
           {
             'title': _title,
             'content': _content,
@@ -67,15 +90,17 @@ class _NewsFormPageState extends State<NewsFormPage> {
         if (context.mounted) {
           setState(() => _isLoading = false);
           
-          // Cek response dari JsonResponse Django
-          if (response['id'] != null) {
+          if (response['ok'] == true || response['id'] != null || response['status'] == true) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Berita berhasil dibuat!"), backgroundColor: Colors.green),
+              SnackBar(
+                content: Text(widget.newsToEdit != null ? "Berita berhasil diupdate!" : "Berita berhasil dibuat!"), 
+                backgroundColor: Colors.green
+              ),
             );
-            Navigator.pop(context); // Kembali ke halaman sebelumnya
+            Navigator.pop(context, true); 
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response['error'] ?? "Gagal membuat berita"), backgroundColor: Colors.red),
+              SnackBar(content: Text(response['error'] ?? response['message'] ?? "Gagal menyimpan berita"), backgroundColor: Colors.red),
             );
           }
         }
@@ -94,21 +119,27 @@ class _NewsFormPageState extends State<NewsFormPage> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      labelStyle: const TextStyle(color: Colors.white70),
-      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+      labelStyle: GoogleFonts.poppins(color: Colors.white70),
+      hintStyle: GoogleFonts.poppins(color: Colors.white.withOpacity(0.3)),
       filled: true,
       fillColor: Colors.black.withOpacity(0.2),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: ArenaColor.dragonFruit)),
+    );
+  }
+
+  // --- HELPER BACKGROUND GLOW ---
+  Widget _buildGlowCircle(Color color) {
+    return Container(
+      width: 300, height: 300,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2), 
+        shape: BoxShape.circle,
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: ArenaColor.dragonFruit),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+        child: Container(color: Colors.transparent),
       ),
     );
   }
@@ -125,117 +156,139 @@ class _NewsFormPageState extends State<NewsFormPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Create News",
+          widget.newsToEdit != null ? "Edit News" : "Create News",
           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. TITLE
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDecoration("Title", "Judul Berita"),
-                onSaved: (value) => _title = value!,
-                validator: (value) => value!.isEmpty ? "Judul tidak boleh kosong" : null,
-              ),
-              const SizedBox(height: 20),
+      // --- GUNAKAN STACK UNTUK BACKGROUND ---
+      body: Stack(
+        children: [
+          // 1. Background Glows
+          Positioned(top: -100, left: -50, child: _buildGlowCircle(ArenaColor.darkAmethystLight)),
+          Positioned(bottom: -100, right: -50, child: _buildGlowCircle(ArenaColor.dragonFruit)),
 
-              // 2. THUMBNAIL URL
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDecoration("Thumbnail URL", "https://example.com/image.jpg"),
-                onSaved: (value) => _thumbnail = value!,
-                validator: (value) => value!.isEmpty ? "URL Gambar tidak boleh kosong" : null,
-              ),
-              const SizedBox(height: 20),
+          // 2. Content Form (Scrollable)
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. TITLE
+                    TextFormField(
+                      initialValue: _title,
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: _inputDecoration("Title", "Judul Berita"),
+                      onSaved: (value) => _title = value!,
+                      validator: (value) => value!.isEmpty ? "Judul tidak boleh kosong" : null,
+                    ),
+                    const SizedBox(height: 20),
 
-              // 3. DROPDOWN SPORTS
-              DropdownButtonFormField<String>(
-                dropdownColor: ArenaColor.darkAmethyst,
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDecoration("Sport", "Pilih Cabang Olahraga"),
-                items: _sportsOptions.map((item) {
-                  return DropdownMenuItem(
-                    value: item['value'],
-                    child: Text(item['label']!),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedSport = val),
-                validator: (value) => value == null ? "Pilih salah satu" : null,
-              ),
-              const SizedBox(height: 20),
+                    // 2. THUMBNAIL URL
+                    TextFormField(
+                      initialValue: _thumbnail,
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: _inputDecoration("Thumbnail URL", "https://example.com/image.jpg"),
+                      onSaved: (value) => _thumbnail = value!,
+                      validator: (value) => value!.isEmpty ? "URL Gambar tidak boleh kosong" : null,
+                    ),
+                    const SizedBox(height: 20),
 
-              // 4. DROPDOWN CATEGORY
-              DropdownButtonFormField<String>(
-                dropdownColor: ArenaColor.darkAmethyst,
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDecoration("Category", "Pilih Kategori Berita"),
-                items: _categoryOptions.map((item) {
-                  return DropdownMenuItem(
-                    value: item['value'],
-                    child: Text(item['label']!),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedCategory = val),
-                validator: (value) => value == null ? "Pilih salah satu" : null,
-              ),
-              const SizedBox(height: 20),
+                    // 3. DROPDOWN SPORTS
+                    DropdownButtonFormField<String>(
+                      value: _selectedSport,
+                      dropdownColor: ArenaColor.darkAmethyst,
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: _inputDecoration("Sport", ""),
+                      hint: Text("Pilih Cabang Olahraga", style: GoogleFonts.poppins(color: Colors.white70)),
+                      items: _sportsOptions.map((item) {
+                        return DropdownMenuItem(
+                          value: item['value'],
+                          child: Text(item['label']!, style: GoogleFonts.poppins()),
+                        );
+                      }).toList(),
+                      onChanged: (val) => setState(() => _selectedSport = val),
+                      validator: (value) => value == null ? "Pilih salah satu" : null,
+                    ),
+                    const SizedBox(height: 20),
 
-              // 5. CONTENT
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                maxLines: 10,
-                decoration: _inputDecoration("Content", "Isi berita..."),
-                onSaved: (value) => _content = value!,
-                validator: (value) => value!.isEmpty ? "Konten tidak boleh kosong" : null,
-              ),
-              const SizedBox(height: 20),
+                    // 4. DROPDOWN CATEGORY
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      dropdownColor: ArenaColor.darkAmethyst,
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      decoration: _inputDecoration("Category", ""),
+                      hint: Text("Pilih Kategori Berita", style: GoogleFonts.poppins(color: Colors.white70)),
+                      items: _categoryOptions.map((item) {
+                        return DropdownMenuItem(
+                          value: item['value'],
+                          child: Text(item['label']!, style: GoogleFonts.poppins()),
+                        );
+                      }).toList(),
+                      onChanged: (val) => setState(() => _selectedCategory = val),
+                      validator: (value) => value == null ? "Pilih salah satu" : null,
+                    ),
+                    const SizedBox(height: 20),
 
-              // 6. IS FEATURED SWITCH
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    // 5. CONTENT
+                    TextFormField(
+                      initialValue: _content,
+                      style: GoogleFonts.poppins(color: Colors.white),
+                      maxLines: 10,
+                      decoration: _inputDecoration("Content", "Isi berita..."),
+                      onSaved: (value) => _content = value!,
+                      validator: (value) => value!.isEmpty ? "Konten tidak boleh kosong" : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 6. IS FEATURED SWITCH
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: SwitchListTile(
+                        title: Text("Featured News?", style: GoogleFonts.poppins(color: Colors.white)),
+                        subtitle: Text("Tampilkan di Carousel Home", style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12)),
+                        value: _isFeatured,
+                        activeColor: ArenaColor.dragonFruit,
+                        onChanged: (val) => setState(() => _isFeatured = val),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // 7. SUBMIT BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ArenaColor.dragonFruit,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 10,
+                          shadowColor: ArenaColor.dragonFruit.withOpacity(0.5),
+                        ),
+                        onPressed: _isLoading ? null : _submitForm,
+                        child: _isLoading 
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              widget.newsToEdit != null ? "UPDATE NEWS" : "POST NEWS",
+                              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-                child: SwitchListTile(
-                  title: const Text("Featured News?", style: TextStyle(color: Colors.white)),
-                  subtitle: const Text("Tampilkan di Carousel Home", style: TextStyle(color: Colors.white54, fontSize: 12)),
-                  value: _isFeatured,
-                  activeColor: ArenaColor.dragonFruit,
-                  onChanged: (val) => setState(() => _isFeatured = val),
-                ),
               ),
-              const SizedBox(height: 30),
-
-              // 7. SUBMIT BUTTON
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ArenaColor.dragonFruit,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 10,
-                    shadowColor: ArenaColor.dragonFruit.withOpacity(0.5),
-                  ),
-                  onPressed: _isLoading ? null : _submitForm,
-                  child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("POST NEWS", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
