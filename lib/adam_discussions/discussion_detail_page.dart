@@ -24,6 +24,7 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
   String? _error;
   bool _userHasUpvoted = false;
   int _upvoteCount = 0;
+  String? _currentUsername;
   final _commentController = TextEditingController();
   bool _isSubmittingComment = false;
 
@@ -53,6 +54,7 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
             .toList();
         _userHasUpvoted = response['thread']?['user_has_upvoted'] ?? false;
         _upvoteCount = response['thread']?['upvote_count'] ?? widget.thread.upvoteCount;
+        _currentUsername = response['current_username'] as String?;
         _isLoading = false;
         _error = null;
       });
@@ -190,6 +192,146 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _editComment(DiscussionComment comment) async {
+    final controller = TextEditingController(text: comment.content);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: ArenaColor.darkAmethyst,
+        title: const Text('Edit Komentar', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'Tulis komentar...',
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.08),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Batal', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: ArenaColor.dragonFruit),
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty && result != comment.content) {
+      final request = context.read<CookieRequest>();
+      try {
+        final response = await request.postJson(
+          '$baseUrl/discussions/api/comments/${comment.id}/',
+          jsonEncode({'content': result}),
+        );
+        if (response['ok'] == true && mounted) {
+          setState(() {
+            final index = _comments.indexWhere((c) => c.id == comment.id);
+            if (index != -1) {
+              _comments[index] = DiscussionComment(
+                id: comment.id,
+                content: response['content'] ?? result,
+                authorDisplay: comment.authorDisplay,
+                authorUsername: comment.authorUsername,
+                createdAt: comment.createdAt,
+                parentId: comment.parentId,
+              );
+            }
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.only(bottom: 16, left: 16, right: 16),
+              content: Text('Komentar berhasil diperbarui!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+              content: Text('Gagal mengedit komentar: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteComment(DiscussionComment comment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: ArenaColor.darkAmethyst,
+        title: const Text('Hapus Komentar', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Yakin ingin menghapus komentar ini?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final request = context.read<CookieRequest>();
+      try {
+        final response = await request.post(
+          '$baseUrl/discussions/api/comments/${comment.id}/delete/',
+          {},
+        );
+        if (response['ok'] == true && mounted) {
+          setState(() {
+            _comments.removeWhere((c) => c.id == comment.id);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.only(bottom: 16, left: 16, right: 16),
+              content: Text('Komentar berhasil dihapus!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+              content: Text('Gagal menghapus komentar: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -407,22 +549,40 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.white.withOpacity(0.06)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.newspaper, color: ArenaColor.dragonFruit, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      thread.newsTitle!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
+                  Row(
+                    children: [
+                      const Icon(Icons.newspaper, color: ArenaColor.dragonFruit, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          thread.newsTitle!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 2,
+                    ],
+                  ),
+                  if (thread.newsSummary != null && thread.newsSummary!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      thread.newsSummary!,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -493,6 +653,8 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
   }
 
   Widget _buildCommentCard(DiscussionComment comment) {
+    final isOwner = _currentUsername != null && _currentUsername == comment.authorUsername;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -548,6 +710,40 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                   ],
                 ),
               ),
+              if (isOwner)
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5), size: 20),
+                  color: ArenaColor.darkAmethyst,
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _editComment(comment);
+                    } else if (value == 'delete') {
+                      _deleteComment(comment);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, color: Colors.white70, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.redAccent, size: 18),
+                          SizedBox(width: 8),
+                          Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           const SizedBox(height: 10),
@@ -631,6 +827,7 @@ class DiscussionComment {
     required this.id,
     required this.content,
     required this.authorDisplay,
+    required this.authorUsername,
     required this.createdAt,
     this.parentId,
   });
@@ -643,6 +840,7 @@ class DiscussionComment {
       authorDisplay: author['display_name'] as String? ??
           author['username'] as String? ??
           'Anonim',
+      authorUsername: author['username'] as String? ?? '',
       createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
       parentId: json['parent_id'] as int?,
     );
@@ -651,6 +849,7 @@ class DiscussionComment {
   final int id;
   final String content;
   final String authorDisplay;
+  final String authorUsername;
   final DateTime createdAt;
   final int? parentId;
 
