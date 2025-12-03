@@ -1,5 +1,3 @@
-// ... imports dan fungsi parsing JSON tetap sama ...
-
 class NewsEntry {
     String id;
     String title;
@@ -46,8 +44,6 @@ class NewsEntry {
 
     // 3. Getter untuk Live Badge
     bool get isLive => category.toLowerCase() == 'match';
-
-    // --- AKHIR TAMBAHAN ---
 
     factory NewsEntry.fromJson(Map<String, dynamic> json) => NewsEntry(
         id: json["id"],

@@ -190,11 +190,9 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
           // 3. GLASSY NAVBAR (GLOBAL)
           GlassyNavbar(
             userProvider: userProvider,
-            // Ikon tengah di Discussions bisa digunakan untuk Refresh atau Kembali ke Home
             fabIcon: Icons.grid_view_rounded, 
             onFabTap: () {
-              // Jika user ingin kembali ke Home dari halaman diskusi
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pop(context); // Kembali ke Home
             },
           ),
         ],

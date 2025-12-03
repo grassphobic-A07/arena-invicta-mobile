@@ -1,15 +1,14 @@
 import 'dart:ui';
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 
-// --- IMPORTS MODUL ---
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/screens/splash_screen.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; 
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; 
-import 'package:arena_invicta_mobile/global/environments.dart'; 
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
@@ -56,7 +55,6 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: SplashScreen.routeName,
         routes: {
-          '/': (context) => const SplashScreen(),
           SplashScreen.routeName: (context) => const SplashScreen(),
           MyApp.routeName: (context) => const HomePage(),
           LoginPage.routeName: (context) => const LoginPage(),
@@ -79,17 +77,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  String activeCategory = "All";
+  // List Kategori
   final List<String> categories = ["All", "Football", "Basketball", "Tennis", "Volleyball", "Motogp"];
 
   // --- LOGIKA FETCH & PISAHKAN DATA ---
   Future<Map<String, List<NewsEntry>>> fetchHomeNews(CookieRequest request) async {
-    String url = '$baseUrl/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
+    // URL tanpa filter, karena Home menampilkan highlight global
+    String url = '$baseUrl/show-news-json';
     
-    if (activeCategory != "All") {
-      url += '?filter=${activeCategory.toLowerCase()}';
-    }
-
     try {
       final response = await request.get(url);
       List<NewsEntry> allNews = [];
@@ -139,7 +134,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Text(
         title,
-        style: GoogleFonts.poppins(
+        style: GoogleFonts.outfit(
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.bold,
@@ -172,7 +167,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
                 Text(topic, style: TextStyle(color: Colors.white54, fontSize: 12)),
               ],
@@ -209,7 +204,7 @@ class _HomePageState extends State<HomePage> {
           // 2. MAIN CONTENT
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 110, bottom: 120), 
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70, bottom: 120),  
               child: FutureBuilder<Map<String, List<NewsEntry>>>(
                 future: fetchHomeNews(request),
                 builder: (context, snapshot) {
@@ -230,12 +225,12 @@ class _HomePageState extends State<HomePage> {
                       
                       // --- A. CAROUSEL SECTION ---
                       SizedBox(
-                        height: 200, // Tinggi Area Carousel
+                        height: 250, 
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
                              Positioned(
-                               top: -60,
+                               top: -20,
                                left: 0, 
                                right: 0,
                                height: 250,
@@ -259,7 +254,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 10),
 
                       // --- B. SPORTS CHIPS ---
                       SizedBox(
@@ -273,35 +268,31 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 const SizedBox(width: 25), 
                                 ...categories.map((cat) {
-                                  final isAll = cat == "All";
-                                  final isActive = activeCategory == cat;
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 12), 
                                     child: GestureDetector(
+                                      // LOGIKA NAVIGASI:
                                       onTap: () {
-                                        if (isAll) {
-                                          Navigator.pushNamed(context, NewsEntryListPage.routeName);
-                                        } else {
-                                          setState(() => activeCategory = cat);
-                                        }
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => NewsEntryListPage(
+                                              initialCategory: cat == "All" ? "All" : cat.toLowerCase(),
+                                            ),
+                                          ),
+                                        );
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
-                                          color: (isActive && !isAll) 
-                                              ? ArenaColor.purpleX11 
-                                              : ArenaColor.darkAmethystLight.withOpacity(0.3),
+                                          color: ArenaColor.darkAmethystLight.withOpacity(0.3),
                                           borderRadius: BorderRadius.circular(100),
-                                          border: Border.all(
-                                            color: (isActive && !isAll) 
-                                                ? ArenaColor.purpleX11 
-                                                : Colors.white.withOpacity(0.1)
-                                          ),
+                                          border: Border.all(color: Colors.white.withOpacity(0.1)),
                                         ),
                                         child: Text(
                                           cat,
-                                          style: GoogleFonts.poppins(
+                                          style: GoogleFonts.outfit(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
@@ -317,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 10),
 
                       // --- C. LIST SECTION (TRENDING NEWS) ---
                       _buildSectionTitle("Trending News"),
@@ -371,15 +362,14 @@ class _HomePageState extends State<HomePage> {
 
           // 3. HEADER & NAVBAR
           GlassyHeader(userProvider: userProvider, scaffoldKey: _scaffoldKey, isHome: true, title: "Arena Invicta"),
-          GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () => setState(() => activeCategory = "All")),
+          GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
         ],
       ),
     );
   }
 }
 
-// --- PROVIDER DI DALAM MAIN.DART ---
-// Ini agar kamu tidak perlu file provider terpisah
+// --- PROVIDER ---
 enum UserRole { registered, staff, admin }
 
 class UserProvider extends ChangeNotifier {

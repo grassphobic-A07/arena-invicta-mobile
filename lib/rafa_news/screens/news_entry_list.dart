@@ -11,7 +11,7 @@ import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart'; 
-import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart'; // Untuk tombol + (create)
+import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart'; // Import Form
 
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
@@ -43,7 +43,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
   }
 
   Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
-    String url = '$baseUrl/show-news-json'; // TODO: GANTI KE URL SERVER KALAU UDAH DEPLOY
+    String url = '$baseUrl/show-news-json'; 
     if (_selectedSport != "All") {
       url += '?filter=${_selectedSport.toLowerCase()}';
     }
@@ -74,25 +74,36 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
     final request = context.watch<CookieRequest>();
     final userProvider = context.watch<UserProvider>();
 
+    // Logic Role Text
+    String roleText = "Guest";
+    if (userProvider.isLoggedIn) {
+      if (userProvider.role == UserRole.admin) roleText = "Admin";
+      else if (userProvider.role == UserRole.staff) roleText = "Writer";
+      else roleText = "Member";
+    }
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: ArenaInvictaDrawer(
         userProvider: userProvider,
-        roleText: "", // Text role ditangani oleh GlassyHeader
+        roleText: roleText,
       ),
       backgroundColor: ArenaColor.darkAmethyst,
       resizeToAvoidBottomInset: false, 
       
-      // Tombol Tambah Berita
+      // --- TOMBOL TAMBAH BERITA ---
       floatingActionButton: (userProvider.isLoggedIn && (userProvider.role == UserRole.staff || userProvider.role == UserRole.admin))
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 80.0),
+              padding: const EdgeInsets.only(bottom: 110.0, right: 10.0), 
               child: FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const NewsFormPage()),
                   );
+                  if (result == true) {
+                    setState(() {});
+                  }
                 },
                 backgroundColor: ArenaColor.dragonFruit,
                 child: const Icon(Icons.add, color: Colors.white),
@@ -106,16 +117,15 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
           Positioned(top: -50, right: -50, child: _buildGlowCircle(ArenaColor.purpleX11)),
           Positioned(bottom: 100, left: -50, child: _buildGlowCircle(ArenaColor.dragonFruit)),
 
-          // 2. MAIN CONTENT (SCROLLABLE)
+          // 2. MAIN CONTENT
           Positioned.fill(
             child: SingleChildScrollView(
-              // Padding Top 110: Agar konten mulai di bawah Header Fixed
               padding: const EdgeInsets.only(top: 110, bottom: 120), 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   
-                  // A. FILTER KATEGORI (CHIPS) - Ikut Scroll
+                  // A. FILTER KATEGORI (CHIPS)
                   SizedBox(
                     height: 45,
                     child: Center(
@@ -138,7 +148,6 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      // Style Pink Glow
                                       color: isSelected 
                                           ? ArenaColor.dragonFruit.withOpacity(0.1) 
                                           : ArenaColor.darkAmethystLight.withOpacity(0.3),
@@ -152,9 +161,9 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                                           : [],
                                     ),
                                     child: Text(
-                                      sport == "All" ? "All" : sport[0].toUpperCase() + sport.substring(1),
-                                      style: GoogleFonts.poppins(
-                                        color: isSelected ? Colors.white.withOpacity(0.8) : Colors.white,
+                                      sport, 
+                                      style: GoogleFonts.outfit(
+                                        color: isSelected ? ArenaColor.dragonFruit : Colors.white,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
@@ -171,7 +180,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
 
                   const SizedBox(height: 24),
 
-                  // B. LIST BERITA (TILE STYLE) - Ikut Scroll
+                  // B. LIST BERITA
                   FutureBuilder<List<NewsEntry>>(
                     future: fetchNews(request),
                     builder: (context, snapshot) {
@@ -201,15 +210,15 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
                             final news = snapshot.data![index];
-                            
-                            // PENTING: Gunakan NewsEntryTile di sini!
                             return NewsEntryTile( 
                               news: news,
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                final result = await Navigator.push(
                                   context, 
                                   MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))
                                 );
+                                // Refresh jika kembali setelah edit/delete
+                                if (result == true) setState(() {});
                               },
                             );
                           },
@@ -222,21 +231,21 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
             ),
           ),
 
-          // 3. HEADER (FIXED DI ATAS)
+          // 3. HEADER
           GlassyHeader(
             userProvider: userProvider,
             scaffoldKey: _scaffoldKey, 
-            isHome: true, 
+            isHome: false, 
             title: "ARENA INVICTA",
             subtitle: "Latest News 📰",
           ),
 
-          // 4. NAVBAR (FIXED DI BAWAH)
+          // 4. NAVBAR
           GlassyNavbar(
             userProvider: userProvider,
             fabIcon: Icons.grid_view_rounded, 
             onFabTap: () {
-              Navigator.pop(context); // Kembali ke Home
+              Navigator.pop(context); 
             },
           ),
         ],

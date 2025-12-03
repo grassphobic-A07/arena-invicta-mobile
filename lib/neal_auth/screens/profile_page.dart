@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +15,6 @@ class ProfilePage extends StatefulWidget {
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
-
 class _ProfilePageState extends State<ProfilePage> {
   // Controller untuk Form
   final _formKey = GlobalKey<FormState>();
