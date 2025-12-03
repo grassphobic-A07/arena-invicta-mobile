@@ -90,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToHome() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const MyHomePage(),
+        pageBuilder: (context, animation, secondaryAnimation) => const HomePage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // Menggunakan animasi Zoom Out + Fade yang keren
           return FadeTransition(

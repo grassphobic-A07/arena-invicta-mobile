@@ -6,7 +6,16 @@ import 'package:arena_invicta_mobile/hannan_quiz/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
-  const GlassBottomNavBar({super.key});
+  const GlassBottomNavBar({
+    super.key,
+    required this.activeIndex,
+    required this.onItemTap,
+    this.onCenterTap,
+  });
+
+  final int activeIndex;
+  final ValueChanged<int> onItemTap;
+  final VoidCallback? onCenterTap;
 
   @override
   Widget build(BuildContext context) {
@@ -44,28 +53,24 @@ class GlassBottomNavBar extends StatelessWidget {
                     children: [
                       _NavIcon(
                         icon: Icons.videogame_asset,
-                        isActive: true,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AppBackground(child: QuizMainPage()),
-                            ),
-                          );
-                        },
+                        isActive: activeIndex == 0,
+                        onTap: () => onItemTap(0),
                       ),
                       _NavIcon(
                         icon: Icons.chat_bubble_outline,
-                        onTap: () {},
+                        isActive: activeIndex == 1,
+                        onTap: () => onItemTap(1),
                       ),
                       const SizedBox(width: 60),
                       _NavIcon(
                         icon: Icons.bar_chart,
-                        onTap: () {},
+                        isActive: activeIndex == 2,
+                        onTap: () => onItemTap(2),
                       ),
                       _NavIcon(
                         icon: Icons.person_outline,
-                        onTap: () {},
+                        isActive: activeIndex == 3,
+                        onTap: () => onItemTap(3),
                       ),
                     ],
                   ),
@@ -100,9 +105,17 @@ class GlassBottomNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.grid_view_rounded,
-                color: Colors.white,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onCenterTap,
+                  child: const Icon(
+                    Icons.grid_view_rounded,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
