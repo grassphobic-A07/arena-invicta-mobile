@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/main.dart';
-import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
 
 class GlassyNavbar extends StatelessWidget {
   final UserProvider userProvider;

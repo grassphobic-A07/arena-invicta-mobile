@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
-import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/models/discussion_models.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/main.dart';
+import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
+import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
 
 class DiscussionDetailPage extends StatefulWidget {
   const DiscussionDetailPage({super.key, required this.thread});
@@ -53,7 +55,8 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
             .map((c) => DiscussionComment.fromJson(c as Map<String, dynamic>))
             .toList();
         _userHasUpvoted = response['thread']?['user_has_upvoted'] ?? false;
-        _upvoteCount = response['thread']?['upvote_count'] ?? widget.thread.upvoteCount;
+        _upvoteCount =
+            response['thread']?['upvote_count'] ?? widget.thread.upvoteCount;
         _currentUsername = response['current_username'] as String?;
         _isLoading = false;
         _error = null;
@@ -200,7 +203,10 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: ArenaColor.darkAmethyst,
-        title: const Text('Edit Komentar', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Edit Komentar',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
@@ -219,10 +225,15 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Batal', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+            child: Text(
+              'Batal',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: ArenaColor.dragonFruit),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ArenaColor.dragonFruit,
+            ),
             onPressed: () => Navigator.pop(context, controller.text.trim()),
             child: const Text('Simpan', style: TextStyle(color: Colors.white)),
           ),
@@ -280,7 +291,10 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: ArenaColor.darkAmethyst,
-        title: const Text('Hapus Komentar', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Hapus Komentar',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'Yakin ingin menghapus komentar ini?',
           style: TextStyle(color: Colors.white70),
@@ -288,7 +302,10 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+            child: Text(
+              'Batal',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -334,6 +351,35 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
     }
   }
 
+  Future<void> _navigateToNews() async {
+    final newsId = widget.thread.newsId;
+    if (newsId == null) return;
+
+    final request = context.read<CookieRequest>();
+    try {
+      // Fetch news data (no trailing slash)
+      final response = await request.get('$baseUrl/news/$newsId/json-data');
+      if (response != null && mounted) {
+        final news = NewsEntry.fromJson(response);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => NewsDetailPage(news: news)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+            content: Text('Gagal memuat berita: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final thread = widget.thread;
@@ -371,11 +417,17 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
             children: [
               // AppBar
               AppBar(
-                title: const Text('Diskusi', style: TextStyle(color: Colors.white)),
+                title: const Text(
+                  'Diskusi',
+                  style: TextStyle(color: Colors.white),
+                ),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -384,64 +436,68 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
               Expanded(
                 child: _isLoading
                     ? const Center(
-                        child: CircularProgressIndicator(color: ArenaColor.purpleX11),
+                        child: CircularProgressIndicator(
+                          color: ArenaColor.purpleX11,
+                        ),
                       )
                     : _error != null
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _error!,
-                                    style: const TextStyle(color: Colors.white70),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: _fetchDetail,
-                                    child: const Text('Coba Lagi'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : ListView(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Thread content card
-                              _buildThreadCard(thread),
-                              const SizedBox(height: 20),
-
-                              // Comments section
                               Text(
-                                'Komentar (${_comments.length})',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                _error!,
+                                style: const TextStyle(color: Colors.white70),
+                                textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 12),
-
-                              if (_comments.isEmpty)
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    'Belum ada komentar. Jadilah yang pertama!',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                )
-                              else
-                                ..._comments.map((c) => _buildCommentCard(c)),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _fetchDetail,
+                                child: const Text('Coba Lagi'),
+                              ),
                             ],
                           ),
+                        ),
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                        children: [
+                          // Thread content card
+                          _buildThreadCard(thread),
+                          const SizedBox(height: 20),
+
+                          // Comments section
+                          Text(
+                            'Komentar (${_comments.length})',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          if (_comments.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Belum ada komentar. Jadilah yang pertama!',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          else
+                            ..._comments.map((c) => _buildCommentCard(c)),
+                        ],
+                      ),
               ),
 
               // Comment input
@@ -542,48 +598,61 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
           // Related news
           if (thread.newsTitle != null) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.newspaper, color: ArenaColor.dragonFruit, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          thread.newsTitle!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+            GestureDetector(
+              onTap: _navigateToNews,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.newspaper,
+                          color: ArenaColor.dragonFruit,
+                          size: 20,
                         ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            thread.newsTitle!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: Colors.white.withOpacity(0.4),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    if (thread.newsSummary != null &&
+                        thread.newsSummary!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        thread.newsSummary!,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                  ),
-                  if (thread.newsSummary != null && thread.newsSummary!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      thread.newsSummary!,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
           ],
@@ -599,7 +668,10 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
               GestureDetector(
                 onTap: _toggleUpvote,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _userHasUpvoted
                         ? ArenaColor.dragonFruit.withOpacity(0.2)
@@ -615,15 +687,21 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        _userHasUpvoted ? Icons.thumb_up : Icons.thumb_up_outlined,
-                        color: _userHasUpvoted ? ArenaColor.dragonFruit : Colors.white70,
+                        _userHasUpvoted
+                            ? Icons.thumb_up
+                            : Icons.thumb_up_outlined,
+                        color: _userHasUpvoted
+                            ? ArenaColor.dragonFruit
+                            : Colors.white70,
                         size: 18,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '$_upvoteCount',
                         style: TextStyle(
-                          color: _userHasUpvoted ? ArenaColor.dragonFruit : Colors.white70,
+                          color: _userHasUpvoted
+                              ? ArenaColor.dragonFruit
+                              : Colors.white70,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -632,14 +710,22 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                 ),
               ),
               const SizedBox(width: 16),
-              const Icon(Icons.mode_comment_outlined, color: Colors.white54, size: 18),
+              const Icon(
+                Icons.mode_comment_outlined,
+                color: Colors.white54,
+                size: 18,
+              ),
               const SizedBox(width: 6),
               Text(
                 '${_comments.length}',
                 style: const TextStyle(color: Colors.white70),
               ),
               const SizedBox(width: 16),
-              const Icon(Icons.visibility_outlined, color: Colors.white54, size: 18),
+              const Icon(
+                Icons.visibility_outlined,
+                color: Colors.white54,
+                size: 18,
+              ),
               const SizedBox(width: 6),
               Text(
                 '${thread.viewsCount}',
@@ -653,8 +739,9 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
   }
 
   Widget _buildCommentCard(DiscussionComment comment) {
-    final isOwner = _currentUsername != null && _currentUsername == comment.authorUsername;
-    
+    final isOwner =
+        _currentUsername != null && _currentUsername == comment.authorUsername;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -712,7 +799,11 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
               ),
               if (isOwner)
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5), size: 20),
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Colors.white.withOpacity(0.5),
+                    size: 20,
+                  ),
                   color: ArenaColor.darkAmethyst,
                   onSelected: (value) {
                     if (value == 'edit') {
@@ -738,7 +829,10 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                         children: [
                           Icon(Icons.delete, color: Colors.redAccent, size: 18),
                           SizedBox(width: 8),
-                          Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+                          Text(
+                            'Hapus',
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
                         ],
                       ),
                     ),
@@ -783,7 +877,10 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.08),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
@@ -812,60 +909,15 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-// Comment model
-class DiscussionComment {
-  const DiscussionComment({
-    required this.id,
-    required this.content,
-    required this.authorDisplay,
-    required this.authorUsername,
-    required this.createdAt,
-    this.parentId,
-  });
-
-  factory DiscussionComment.fromJson(Map<String, dynamic> json) {
-    final author = json['author'] as Map<String, dynamic>? ?? {};
-    return DiscussionComment(
-      id: json['id'] as int,
-      content: json['content'] as String? ?? '',
-      authorDisplay: author['display_name'] as String? ??
-          author['username'] as String? ??
-          'Anonim',
-      authorUsername: author['username'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
-      parentId: json['parent_id'] as int?,
-    );
-  }
-
-  final int id;
-  final String content;
-  final String authorDisplay;
-  final String authorUsername;
-  final DateTime createdAt;
-  final int? parentId;
-
-  String get relativeTime => _formatRelative(createdAt);
-}
-
-String _formatRelative(DateTime dateTime) {
-  final diff = DateTime.now().difference(dateTime);
-  if (diff.inMinutes < 1) return 'Baru saja';
-  if (diff.inHours < 1) return '${diff.inMinutes}m';
-  if (diff.inHours < 24) return '${diff.inHours}h';
-  if (diff.inDays < 7) return '${diff.inDays}d';
-  final weeks = (diff.inDays / 7).floor();
-  if (weeks < 4) return '${weeks}w';
-  final months = (diff.inDays / 30).floor();
-  if (months < 12) return '${months}mo';
-  final years = (diff.inDays / 365).floor();
-  return '${years}y';
 }

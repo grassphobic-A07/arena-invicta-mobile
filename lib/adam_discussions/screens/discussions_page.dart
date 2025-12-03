@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
-// --- IMPORTS ---
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; // GUNAKAN NAVBAR GLOBAL
-import 'package:arena_invicta_mobile/global/environments.dart'; // Gunakan baseUrl
+import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart';
+import 'package:arena_invicta_mobile/global/environments.dart';
 
-import 'package:arena_invicta_mobile/adam_discussions/create_discussion_page.dart';
-import 'package:arena_invicta_mobile/adam_discussions/discussion_detail_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/screens/create_discussion_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/screens/discussion_detail_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/models/discussion_models.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
-import 'package:arena_invicta_mobile/main.dart'; // Untuk UserProvider
+import 'package:arena_invicta_mobile/main.dart';
 
 class DiscussionsPage extends StatefulWidget {
   const DiscussionsPage({super.key});
@@ -191,15 +191,18 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
                         else if (_threads.isEmpty)
                           const _EmptyState()
                         else
-                          ..._threads.map((t) => _ThreadCard(
-                            thread: t,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DiscussionDetailPage(thread: t),
+                          ..._threads.map(
+                            (t) => _ThreadCard(
+                              thread: t,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      DiscussionDetailPage(thread: t),
+                                ),
                               ),
                             ),
-                          )),
+                          ),
                       ],
                     ),
                   ),
@@ -339,140 +342,143 @@ class _ThreadCard extends StatelessWidget {
                         : '?',
                     style: const TextStyle(
                       color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        thread.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'oleh ${thread.authorDisplay} · ${thread.relativeTime}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (thread.tags.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: thread.tags
+                    .map(
+                      (tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: ArenaColor.dragonFruit.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          tag,
+                          style: const TextStyle(
+                            color: ArenaColor.dragonFruit,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
-              const SizedBox(width: 10),
-              Expanded(
+            if (thread.tags.isNotEmpty) const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(
+                  Icons.mode_comment_outlined,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${thread.commentCount}',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.visibility_outlined,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  formatCount(thread.viewsCount),
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.thumb_up_alt_outlined,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  formatCount(thread.upvoteCount),
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            if (thread.newsTitle != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      thread.title,
+                      'Terkait: ${thread.newsTitle}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'oleh ${thread.authorDisplay} · ${thread.relativeTime}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
-                        fontSize: 12,
+                    if (thread.newsSummary != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        thread.newsSummary ?? '',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.4)),
             ],
-          ),
-          const SizedBox(height: 10),
-          if (thread.tags.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: thread.tags
-                  .map(
-                    (tag) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ArenaColor.dragonFruit.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(
-                          color: ArenaColor.dragonFruit,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          if (thread.tags.isNotEmpty) const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(
-                Icons.mode_comment_outlined,
-                color: Colors.white54,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${thread.commentCount}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(width: 12),
-              const Icon(
-                Icons.visibility_outlined,
-                color: Colors.white54,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _formatCount(thread.viewsCount),
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.thumb_up_alt_outlined,
-                color: Colors.white54,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _formatCount(thread.upvoteCount),
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
-          if (thread.newsTitle != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Terkait: ${thread.newsTitle}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (thread.newsSummary != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      thread.newsSummary ?? '',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
-                        fontSize: 12,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -560,82 +566,4 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-class DiscussionThread {
-  const DiscussionThread({
-    required this.id,
-    required this.title,
-    required this.authorDisplay,
-    required this.createdAt,
-    required this.commentCount,
-    required this.upvoteCount,
-    required this.viewsCount,
-    this.body,
-    this.newsTitle,
-    this.newsSummary,
-  });
-
-  factory DiscussionThread.fromJson(Map<String, dynamic> json) {
-    final author = json['author'] as Map<String, dynamic>? ?? {};
-    final news = json['news'] as Map<String, dynamic>? ?? {};
-    return DiscussionThread(
-      id: json['id'] as int,
-      title: json['title'] as String? ?? '',
-      body: json['body'] as String?,
-      authorDisplay:
-          author['display_name'] as String? ??
-          author['username'] as String? ??
-          'Anonim',
-      createdAt:
-          DateTime.tryParse(json['created_at'] as String? ?? '') ??
-          DateTime.now(),
-      commentCount: json['comment_count'] as int? ?? 0,
-      upvoteCount: json['upvote_count'] as int? ?? 0,
-      viewsCount: json['views_count'] as int? ?? 0,
-      newsTitle: news['title'] as String?,
-      newsSummary: news['summary'] as String?,
-    );
-  }
-
-  final int id;
-  final String title;
-  final String? body;
-  final String authorDisplay;
-  final DateTime createdAt;
-  final int commentCount;
-  final int upvoteCount;
-  final int viewsCount;
-  final String? newsTitle;
-  final String? newsSummary;
-
-  List<String> get tags {
-    final list = <String>[];
-    if (newsTitle != null) list.add('News');
-    if (upvoteCount > 10) list.add('Populer');
-    if (commentCount == 0) list.add('Belum Dijawab');
-    return list;
-  }
-
-  String get relativeTime => _formatRelative(createdAt);
-}
-
-String _formatCount(int value) {
-  if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}m';
-  if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
-  return value.toString();
-}
-
-String _formatRelative(DateTime dateTime) {
-  final diff = DateTime.now().difference(dateTime);
-  if (diff.inMinutes < 1) return 'Baru saja';
-  if (diff.inHours < 1) return '${diff.inMinutes}m';
-  if (diff.inHours < 24) return '${diff.inHours}h';
-  if (diff.inDays < 7) return '${diff.inDays}d';
-  final weeks = (diff.inDays / 7).floor();
-  if (weeks < 4) return '${weeks}w';
-  final months = (diff.inDays / 30).floor();
-  if (months < 12) return '${months}mo';
-  final years = (diff.inDays / 365).floor();
-  return '${years}y';
 }

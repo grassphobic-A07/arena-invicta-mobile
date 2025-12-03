@@ -20,7 +20,9 @@ import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
 import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart'; 
-import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart'; 
+import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart';
+
+import 'package:arena_invicta_mobile/adam_discussions/widgets/hot_discussions_section.dart';
 
 void main() {
   runApp(const MyApp());
@@ -144,47 +146,6 @@ class _HomePageState extends State<HomePage> {
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
-      ),
-    );
-  }
-
-  Widget _buildDiscussionCard({required String title, required String topic, required String count, required String imageUrl}) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ArenaColor.darkAmethystLight.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              width: 60, height: 60, fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(width: 60, height: 60, color: Colors.grey.withOpacity(0.2)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(topic, style: TextStyle(color: Colors.white54, fontSize: 12)),
-              ],
-            ),
-          ),
-          Column(
-            children: [
-              const Icon(Icons.keyboard_arrow_up_rounded, color: ArenaColor.dragonFruit),
-              Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-            ],
-          )
-        ],
       ),
     );
   }
@@ -358,8 +319,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 16),
                       _buildSectionTitle("Hot Discussions"),
 
-                      _buildDiscussionCard(title: "Kenapa Bumi Bulat?", topic: "Sains", count: "70", imageUrl: "https://i.pinimg.com/736x/8f/c3/97/8fc397664421896796c00329062363b9.jpg"),
-                      _buildDiscussionCard(title: "Kenapa MC Kotak?", topic: "Gaming", count: "69", imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_86t8XwZqjQRuuvqW_rbVd8QyqHn8lR2YgA&s"),
+                      const HotDiscussionsSection(),
                       
                       const SizedBox(height: 80),
                     ],

@@ -11,7 +11,7 @@ class NewsDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // URL Proxy Config (Sama seperti di card)
-    final String proxyUrl = "$baseUrl/news/image-proxy/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
+    final String proxyUrl = "$baseUrl/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
 
     return Scaffold(
       backgroundColor: ArenaColor.darkAmethyst,
