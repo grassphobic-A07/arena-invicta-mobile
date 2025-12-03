@@ -348,9 +348,12 @@ class _HomePageState extends State<HomePage> {
                       // --- D. DISCUSSIONS SECTION ---
                       const SizedBox(height: 16),
                       _buildSectionTitle("Hot Discussions"),
-
-                      _buildDiscussionCard(title: "Kenapa Bumi Bulat?", topic: "Sains", count: "70", imageUrl: "https://i.pinimg.com/736x/8f/c3/97/8fc397664421896796c00329062363b9.jpg"),
-                      _buildDiscussionCard(title: "Kenapa MC Kotak?", topic: "Gaming", count: "69", imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_86t8XwZqjQRuuvqW_rbVd8QyqHn8lR2YgA&s"),
+                      _buildDiscussionCard(
+                        title: "Champions League Final",
+                        topic: "Discuss the thrilling final match!",
+                        count: "256",
+                        imageUrl: "https://example.com/images/champions_league.jpg",
+                      ),
                       
                       const SizedBox(height: 80),
                     ],

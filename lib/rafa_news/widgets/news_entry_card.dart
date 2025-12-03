@@ -116,14 +116,14 @@ class NewsEntryCard extends StatelessWidget {
                     
                     Text(
                       news.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         height: 1.2,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     
                     const SizedBox(height: 4),

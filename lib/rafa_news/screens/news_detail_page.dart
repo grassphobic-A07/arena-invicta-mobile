@@ -20,10 +20,41 @@ class NewsDetailPage extends StatefulWidget {
 }
 
 class _NewsDetailPageState extends State<NewsDetailPage> {
+  late int _dynamicViews;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // 1. Inisialisasi views dengan data awal
+    _dynamicViews = widget.news.newsViews;
+
+    // 2. Panggil fungsi untuk increment views di server
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchDetailAndIncrement();
+    });
+  }
+
+  Future<void> _fetchDetailAndIncrement() async {
+    final request = context.read<CookieRequest>();
+    // URL Endpoint JSON yang sudah kita edit di Django
+    final String url = '$baseUrl/news/${widget.news.id}/json-data';
+
+    try {
+      final response = await request.get(url);
+      if (response != null && response['news_views'] != null) {
+        setState(() {
+          // Update angka views di layar dengan data baru dari server
+          _dynamicViews = response['news_views'];
+        });
+      }
+    } catch (e) {
+      debugPrint("Gagal increment views: $e");
+    }
+  }
   
   // --- FUNGSI HAPUS BERITA ---
   Future<void> _deleteNews(CookieRequest request) async {
-    // 1. Konfirmasi Dialog
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -45,7 +76,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     if (confirm != true) return;
 
-    // 2. Panggil Endpoint Delete Django
     try {
       final response = await request.post(
         '$baseUrl/news/${widget.news.id}/delete-news-ajax', 
@@ -57,7 +87,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Berita berhasil dihapus"), backgroundColor: Colors.green)
           );
-          // 3. Kembali ke halaman list dan kasih sinyal refresh
           Navigator.pop(context, true); 
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -79,7 +108,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     final request = context.watch<CookieRequest>();
     final userProvider = context.watch<UserProvider>();
     
-    // --- LOGIC PERMISSION ---
+    // Logic Permission
     final bool canAction = userProvider.isLoggedIn && 
         (userProvider.role == UserRole.admin || userProvider.username == widget.news.author);
 
@@ -106,7 +135,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
               ),
             ),
             
-            // --- TOMBOL OPSI (HANYA MUNCUL JIKA AUTHORIZED) ---
+            // Tombol Opsi (Hanya jika Authorized)
             actions: canAction ? [
               Container(
                 margin: const EdgeInsets.all(8),
@@ -120,14 +149,12 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   onSelected: (value) async {
                     if (value == 'edit') {
-                      // Kirim 'newsToEdit' agar form terisi otomatis
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => NewsFormPage(newsToEdit: widget.news),
                         ),
                       );
-                      // Jika berhasil update (result == true), kita bisa refresh page ini
                       if (result == true && context.mounted) {
                         Navigator.pop(context, true); 
                       }
@@ -235,7 +262,8 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       const SizedBox(width: 10),
                       const Icon(Icons.visibility, size: 14, color: Colors.white38),
                       const SizedBox(width: 4),
-                      Text("${widget.news.newsViews} Views", style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                      Text("$_dynamicViews Views", style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                      
                     ],
                   ),
                   const SizedBox(height: 24),
