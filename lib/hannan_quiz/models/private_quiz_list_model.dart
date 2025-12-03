@@ -1,14 +1,14 @@
 // To parse this JSON data, do
 //
-//     final quizEntry = quizEntryFromJson(jsonString);
+//     final privateQuizListEntry = privateQuizListEntryFromJson(jsonString);
 
 import 'dart:convert';
 
-List<QuizEntry> quizEntryFromJson(String str) => List<QuizEntry>.from(json.decode(str).map((x) => QuizEntry.fromJson(x)));
+List<PrivateQuizListEntry> privateQuizListEntryFromJson(String str) => List<PrivateQuizListEntry>.from(json.decode(str).map((x) => PrivateQuizListEntry.fromJson(x)));
 
-String quizEntryToJson(List<QuizEntry> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+String privateQuizListEntryToJson(List<PrivateQuizListEntry> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class QuizEntry {
+class PrivateQuizListEntry {
     int id;
     String title;
     String description;
@@ -17,7 +17,7 @@ class QuizEntry {
     int totalQuestion;
     bool isPublished;
 
-    QuizEntry({
+    PrivateQuizListEntry({
         required this.id,
         required this.title,
         required this.description,
@@ -27,7 +27,7 @@ class QuizEntry {
         required this.isPublished,
     });
 
-    factory QuizEntry.fromJson(Map<String, dynamic> json) => QuizEntry(
+    factory PrivateQuizListEntry.fromJson(Map<String, dynamic> json) => PrivateQuizListEntry(
         id: json["id"],
         title: json["title"],
         description: json["description"],

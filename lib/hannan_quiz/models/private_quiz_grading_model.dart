@@ -1,25 +1,25 @@
 // To parse this JSON data, do
 //
-//     final quizEntry = quizEntryFromJson(jsonString);
+//     final privateQuizGradingEntry = privateQuizGradingEntryFromJson(jsonString);
 
 import 'dart:convert';
 
-QuizEntry quizEntryFromJson(String str) => QuizEntry.fromJson(json.decode(str));
+PrivateQuizGradingEntry privateQuizGradingEntryFromJson(String str) => PrivateQuizGradingEntry.fromJson(json.decode(str));
 
-String quizEntryToJson(QuizEntry data) => json.encode(data.toJson());
+String privateQuizGradingEntryToJson(PrivateQuizGradingEntry data) => json.encode(data.toJson());
 
-class QuizEntry {
+class PrivateQuizGradingEntry {
     int score;
     int total;
     List<Result> result;
 
-    QuizEntry({
+    PrivateQuizGradingEntry({
         required this.score,
         required this.total,
         required this.result,
     });
 
-    factory QuizEntry.fromJson(Map<String, dynamic> json) => QuizEntry(
+    factory PrivateQuizGradingEntry.fromJson(Map<String, dynamic> json) => PrivateQuizGradingEntry(
         score: json["score"],
         total: json["total"],
         result: List<Result>.from(json["result"].map((x) => Result.fromJson(x))),

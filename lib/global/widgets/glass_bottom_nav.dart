@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
+import 'package:arena_invicta_mobile/hannan_quiz/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
@@ -42,7 +44,15 @@ class GlassBottomNavBar extends StatelessWidget {
                     children: [
                       _NavIcon(
                         icon: Icons.videogame_asset,
-                        onTap: () {},
+                        isActive: true,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AppBackground(child: QuizMainPage()),
+                            ),
+                          );
+                        },
                       ),
                       _NavIcon(
                         icon: Icons.chat_bubble_outline,
