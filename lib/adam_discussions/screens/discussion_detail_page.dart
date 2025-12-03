@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
-import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/models/discussion_models.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
@@ -357,8 +357,8 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
 
     final request = context.read<CookieRequest>();
     try {
-      // Fetch news data
-      final response = await request.get('$baseUrl/news/$newsId/json-data/');
+      // Fetch news data (no trailing slash)
+      final response = await request.get('$baseUrl/news/$newsId/json-data');
       if (response != null && mounted) {
         final news = NewsEntry.fromJson(response);
         Navigator.push(
@@ -920,56 +920,4 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
       ),
     );
   }
-}
-
-// Comment model
-class DiscussionComment {
-  const DiscussionComment({
-    required this.id,
-    required this.content,
-    required this.authorDisplay,
-    required this.authorUsername,
-    required this.createdAt,
-    this.parentId,
-  });
-
-  factory DiscussionComment.fromJson(Map<String, dynamic> json) {
-    final author = json['author'] as Map<String, dynamic>? ?? {};
-    return DiscussionComment(
-      id: json['id'] as int,
-      content: json['content'] as String? ?? '',
-      authorDisplay:
-          author['display_name'] as String? ??
-          author['username'] as String? ??
-          'Anonim',
-      authorUsername: author['username'] as String? ?? '',
-      createdAt:
-          DateTime.tryParse(json['created_at'] as String? ?? '') ??
-          DateTime.now(),
-      parentId: json['parent_id'] as int?,
-    );
-  }
-
-  final int id;
-  final String content;
-  final String authorDisplay;
-  final String authorUsername;
-  final DateTime createdAt;
-  final int? parentId;
-
-  String get relativeTime => _formatRelative(createdAt);
-}
-
-String _formatRelative(DateTime dateTime) {
-  final diff = DateTime.now().difference(dateTime);
-  if (diff.inMinutes < 1) return 'Baru saja';
-  if (diff.inHours < 1) return '${diff.inMinutes}m';
-  if (diff.inHours < 24) return '${diff.inHours}h';
-  if (diff.inDays < 7) return '${diff.inDays}d';
-  final weeks = (diff.inDays / 7).floor();
-  if (weeks < 4) return '${weeks}w';
-  final months = (diff.inDays / 30).floor();
-  if (months < 12) return '${months}mo';
-  final years = (diff.inDays / 365).floor();
-  return '${years}y';
 }
