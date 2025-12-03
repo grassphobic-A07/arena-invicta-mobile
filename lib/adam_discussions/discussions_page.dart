@@ -191,15 +191,18 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
                         else if (_threads.isEmpty)
                           const _EmptyState()
                         else
-                          ..._threads.map((t) => _ThreadCard(
-                            thread: t,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DiscussionDetailPage(thread: t),
+                          ..._threads.map(
+                            (t) => _ThreadCard(
+                              thread: t,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      DiscussionDetailPage(thread: t),
+                                ),
                               ),
                             ),
-                          )),
+                          ),
                       ],
                     ),
                   ),
@@ -339,140 +342,143 @@ class _ThreadCard extends StatelessWidget {
                         : '?',
                     style: const TextStyle(
                       color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        thread.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'oleh ${thread.authorDisplay} · ${thread.relativeTime}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (thread.tags.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: thread.tags
+                    .map(
+                      (tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: ArenaColor.dragonFruit.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          tag,
+                          style: const TextStyle(
+                            color: ArenaColor.dragonFruit,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
-              const SizedBox(width: 10),
-              Expanded(
+            if (thread.tags.isNotEmpty) const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(
+                  Icons.mode_comment_outlined,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${thread.commentCount}',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.visibility_outlined,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _formatCount(thread.viewsCount),
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.thumb_up_alt_outlined,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _formatCount(thread.upvoteCount),
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            if (thread.newsTitle != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      thread.title,
+                      'Terkait: ${thread.newsTitle}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'oleh ${thread.authorDisplay} · ${thread.relativeTime}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
-                        fontSize: 12,
+                    if (thread.newsSummary != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        thread.newsSummary ?? '',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.4)),
             ],
-          ),
-          const SizedBox(height: 10),
-          if (thread.tags.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: thread.tags
-                  .map(
-                    (tag) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ArenaColor.dragonFruit.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(
-                          color: ArenaColor.dragonFruit,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          if (thread.tags.isNotEmpty) const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(
-                Icons.mode_comment_outlined,
-                color: Colors.white54,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${thread.commentCount}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(width: 12),
-              const Icon(
-                Icons.visibility_outlined,
-                color: Colors.white54,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _formatCount(thread.viewsCount),
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.thumb_up_alt_outlined,
-                color: Colors.white54,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _formatCount(thread.upvoteCount),
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
-          if (thread.newsTitle != null) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Terkait: ${thread.newsTitle}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (thread.newsSummary != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      thread.newsSummary ?? '',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
-                        fontSize: 12,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -572,6 +578,7 @@ class DiscussionThread {
     required this.upvoteCount,
     required this.viewsCount,
     this.body,
+    this.newsId,
     this.newsTitle,
     this.newsSummary,
   });
@@ -593,6 +600,7 @@ class DiscussionThread {
       commentCount: json['comment_count'] as int? ?? 0,
       upvoteCount: json['upvote_count'] as int? ?? 0,
       viewsCount: json['views_count'] as int? ?? 0,
+      newsId: news['uuid'] as String?,
       newsTitle: news['title'] as String?,
       newsSummary: news['summary'] as String?,
     );
@@ -606,6 +614,7 @@ class DiscussionThread {
   final int commentCount;
   final int upvoteCount;
   final int viewsCount;
+  final String? newsId;
   final String? newsTitle;
   final String? newsSummary;
 
