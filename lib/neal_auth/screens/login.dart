@@ -1,3 +1,4 @@
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
@@ -175,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                                 // Contoh: "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/auth/login/"
                                 try {
                                   final response = await request.login(
-                                    "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/login/",
+                                    "$baseUrl/accounts/api/login/", // TODO: INI JG JANLUP DIUBAH
                                     {
                                       'username': _usernameController.text,
                                       'password': _passwordController.text,
@@ -212,6 +213,8 @@ class _LoginPageState extends State<LoginPage> {
                                         context,
                                       ).showSnackBar(
                                         const SnackBar(
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
                                           content: Text("Login Berhasil!"),
                                           backgroundColor: Colors.greenAccent,
                                         ),

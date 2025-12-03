@@ -4,7 +4,7 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-
+import 'package:arena_invicta_mobile/global/environments.dart';
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
@@ -27,7 +27,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> fetchAdminData() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/admin/dashboard/");
+      final response = await request.get("$baseUrl/accounts/api/admin/dashboard/");
 
       if (response['status']) {
         setState(() {
@@ -62,7 +62,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       // Kirim data map (JANGAN di-jsonEncode, biarkan Map mentah)
       // Karena ini Map<String, String>, library akan menerimanya dengan senang hati.
       final response = await request.post(
-        "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/admin/dashboard/",
+        "$baseUrl/accounts/api/admin/dashboard/",
         data, 
       );
       // -------------------------
@@ -110,7 +110,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       };
 
       final response = await request.post(
-        "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/admin/dashboard/",
+        "$baseUrl/accounts/api/admin/dashboard/",
         data,
       );
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -54,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final request = context.read<CookieRequest>();
     try {
       final response = await request.get(
-        "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/json/",
+        "$baseUrl/accounts/api/profile/json/",
       );
       setState(() {
         _userProfile = UserProfile.fromJson(response);
@@ -79,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final request = context.read<CookieRequest>();
     try {
       final response = await request
-          .post('https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/edit/', {
+          .post('$baseUrl/accounts/api/profile/edit/', {
             'display_name': _displayNameController.text,
             'favourite_team': _favTeamController.text,
             'avatar_url': _avatarUrlController.text,
@@ -150,7 +151,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       // 2. Panggil API Delete
       final response = await request.post(
-        "https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/delete/",
+        "$baseUrl/accounts/api/profile/delete/",
         {}, // Body kosong
       );
 
@@ -194,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> performDelete() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.post("https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/accounts/api/profile/delete/", {});
+      final response = await request.post("$baseUrl/accounts/api/profile/delete/", {});
 
       if (response['status']) {
         if (!mounted) return; 
