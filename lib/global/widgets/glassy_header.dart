@@ -84,7 +84,7 @@ class GlassyHeader extends StatelessWidget {
                           title,
                           style: GoogleFonts.outfit(
                             color: ArenaColor.dragonFruit,
-                            fontSize: isHome ? 18 : 12,
+                            fontSize: isHome ? 14 : 10,
                             fontWeight: FontWeight.w600,
                             letterSpacing: isHome ? 0.5 : 1.5,
                           ),
@@ -124,29 +124,7 @@ class GlassyHeader extends StatelessWidget {
                   )
                 else
                   Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.outfit(fontSize: 14, color: Colors.white),
-                              children: [
-                                const TextSpan(text: "Hi, ", style: TextStyle(fontWeight: FontWeight.w300)),
-                                TextSpan(
-                                  text: userProvider.username,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            roleText,
-                            style: GoogleFonts.outfit(fontSize: 10, color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
+                    children: [                      
                       CircleAvatar(
                         radius: 18,
                         backgroundColor: ArenaColor.purpleX11,

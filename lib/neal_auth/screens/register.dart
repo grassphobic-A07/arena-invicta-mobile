@@ -278,7 +278,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         const SnackBar(
                                           behavior: SnackBarBehavior.floating,
                                           margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
-                                          content: Text("Welcome to the Arena!"),
+                                          content: Text("Welcome to the Arena!", style: TextStyle(color: Colors.black),),
                                           backgroundColor: Colors.greenAccent,
                                         ),
                                       );
@@ -292,6 +292,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                           content: Text(
                                             response['message'] ??
                                                 "Registration Failed",
+                                            style: TextStyle(color: Colors.black),
                                           ),
                                           backgroundColor: Colors.red,
                                         ),
