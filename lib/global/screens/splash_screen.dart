@@ -121,7 +121,18 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.gamepad_rounded, size: 100, color: ArenaColor.dragonFruit,),
+              // Icon(Icons.gamepad_rounded, size: 100, color: ArenaColor.dragonFruit,),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.width * 0.4,
+                padding: const EdgeInsets.all(20),
+                child: ClipOval(
+                  child: Image.asset(
+                    "assets/images/arena-invicta.png",
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20,),
 

@@ -84,7 +84,7 @@ class GlassyHeader extends StatelessWidget {
                           title,
                           style: GoogleFonts.outfit(
                             color: ArenaColor.dragonFruit,
-                            fontSize: isHome ? 14 : 10,
+                            fontSize: isHome ? 18 : 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: isHome ? 0.5 : 1.5,
                           ),
