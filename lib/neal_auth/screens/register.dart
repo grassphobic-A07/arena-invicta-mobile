@@ -85,7 +85,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
               Container(
                 decoration: BoxDecoration(
-                  color: ArenaColor.darkAmethystLight.withOpacity(0.8),
+                  color: ArenaColor.darkAmethyst.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(20), // Lebih bulat
                   border: Border.all(
                     color: ArenaColor.purpleX11.withOpacity(0.5),
@@ -108,6 +108,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
+                          style: TextStyle(color: ArenaColor.textWhite),
                           decoration: _inputDecoration(
                             "Choose a unique username",
                           ),
@@ -120,6 +121,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Password"),
                         TextFormField(
                           controller: _passwordController,
+                          style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
                           decoration: _inputDecoration("Min. 8 characters")
                               .copyWith(
@@ -148,6 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Confirm Password"),
                         TextFormField(
                           controller: _confirmPasswordController,
+                          style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscureConfirmPassword,
                           decoration: _inputDecoration("Re-enter your password")
                               .copyWith(
@@ -175,26 +178,56 @@ class _RegisterPageState extends State<RegisterPage> {
                         // --- Role Selection ---
                         _buildLabel("Your Role"),
                         DropdownButtonFormField<String>(
-                          decoration: _inputDecoration("Select your role"),
-                          initialValue: _selectedRole,
+                          value: _selectedRole,                    // pakai value
+                          isExpanded: true,
+                          dropdownColor: ArenaColor.darkAmethyst,
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                          decoration: _inputDecoration(""),        // kosongkan hint dari decoration
+                          hint: const Text(                        // <-- INI placeholder, warnanya putih
+                            "Select your role",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: Colors.white,                 // PUTIH
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           items: _roleOptions.map((String role) {
                             return DropdownMenuItem<String>(
                               value: role,
                               child: Text(
                                 role,
-                                style: const TextStyle(
-                                  fontSize: 13,
+                                style: const TextStyle(              // <-- font di setiap item
+                                  fontFamily: 'Poppins',
                                   color: Colors.white,
+                                  fontSize: 13,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             );
                           }).toList(),
-                          onChanged: (val) =>
-                              setState(() => _selectedRole = val),
-                          validator: (value) =>
-                              value == null ? "Please select a role" : null,
-                          isExpanded: true,
+                          selectedItemBuilder: (context) {
+                            return _roleOptions.map((role) {
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  role,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList();
+                          },
+                          onChanged: (val) => setState(() => _selectedRole = val),
+                          validator: (value) => value == null ? "Please select a role" : null,
                         ),
                         const SizedBox(height: 32),
 
