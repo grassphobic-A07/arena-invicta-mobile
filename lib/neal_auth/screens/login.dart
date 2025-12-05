@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
-                          style: TextStyle(color: ArenaColor.textWhite),
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Enter your Username"),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -132,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _passwordController,
                           style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(

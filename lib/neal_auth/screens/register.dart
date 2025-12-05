@@ -2,6 +2,7 @@ import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -108,7 +109,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
-                          style: TextStyle(color: ArenaColor.textWhite),
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration(
                             "Choose a unique username",
                           ),
@@ -123,6 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _passwordController,
                           style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Min. 8 characters")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -152,6 +154,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _confirmPasswordController,
                           style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscureConfirmPassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Re-enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -178,31 +181,20 @@ class _RegisterPageState extends State<RegisterPage> {
                         // --- Role Selection ---
                         _buildLabel("Your Role"),
                         DropdownButtonFormField<String>(
-                          value: _selectedRole,                    // pakai value
-                          isExpanded: true,
                           dropdownColor: ArenaColor.darkAmethyst,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.white,
-                            fontSize: 13,
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+                          decoration: _inputDecoration("Select your role"),
+                          hint: Text(
+                            "Select your role", 
+                            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.3))
                           ),
-                          decoration: _inputDecoration(""),        // kosongkan hint dari decoration
-                          hint: const Text(                        // <-- INI placeholder, warnanya putih
-                            "Select your role",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              color: Colors.white,                 // PUTIH
-                              fontSize: 13,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          initialValue: _selectedRole,
                           items: _roleOptions.map((String role) {
                             return DropdownMenuItem<String>(
                               value: role,
                               child: Text(
                                 role,
-                                style: const TextStyle(              // <-- font di setiap item
-                                  fontFamily: 'Poppins',
+                                style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 13,
                                 ),
