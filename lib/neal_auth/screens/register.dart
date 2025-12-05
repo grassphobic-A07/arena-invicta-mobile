@@ -2,6 +2,7 @@ import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -108,6 +109,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration(
                             "Choose a unique username",
                           ),
@@ -121,6 +123,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Min. 8 characters")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -149,6 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: _obscureConfirmPassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Re-enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -175,14 +179,20 @@ class _RegisterPageState extends State<RegisterPage> {
                         // --- Role Selection ---
                         _buildLabel("Your Role"),
                         DropdownButtonFormField<String>(
+                          dropdownColor: ArenaColor.darkAmethyst,
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
                           decoration: _inputDecoration("Select your role"),
+                          hint: Text(
+                            "Select your role", 
+                            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.3))
+                          ),
                           initialValue: _selectedRole,
                           items: _roleOptions.map((String role) {
                             return DropdownMenuItem<String>(
                               value: role,
                               child: Text(
                                 role,
-                                style: const TextStyle(
+                                style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color: Colors.white,
                                 ),
