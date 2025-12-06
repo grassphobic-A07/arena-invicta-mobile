@@ -1,10 +1,12 @@
+import 'dart:ui'; // PENTING: Import ini diperlukan untuk ImageFilter
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart'; // Import Model
+import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
+
 class NewsEntryCard extends StatelessWidget {
-  final NewsEntry news; 
+  final NewsEntry news;
   final VoidCallback onTap;
 
   const NewsEntryCard({
@@ -15,6 +17,7 @@ class NewsEntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // URL Proxy
     final String proxyUrl = "$baseUrl/proxy-image/?url=${Uri.encodeComponent(news.thumbnail ?? '')}";
 
     return GestureDetector(
@@ -22,7 +25,7 @@ class NewsEntryCard extends StatelessWidget {
       child: Container(
         height: 220,
         width: double.infinity,
-        // 1. CONTAINER LUAR: HANYA UNTUK SHADOW
+        // 1. CONTAINER LUAR
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
           color: ArenaColor.darkAmethyst,
@@ -34,7 +37,7 @@ class NewsEntryCard extends StatelessWidget {
             ),
           ],
         ),
-        // 2. CLIPRRRECT: MEMOTONG GAMBAR
+        // 2. CLIPRRRECT
         child: ClipRRect(
           borderRadius: BorderRadius.circular(32),
           child: Stack(
@@ -84,37 +87,51 @@ class NewsEntryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: ArenaColor.dragonFruit.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: ArenaColor.dragonFruit.withOpacity(0.8)),
-                      ),
-                      child: Text(
-                        news.sports, // Ambil dari object news
-                        style: GoogleFonts.poppins(
-                          color: ArenaColor.dragonFruit,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            // Warna Pink dengan Opacity 60% agar blur terlihat
+                            color: ArenaColor.dragonFruit.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+                          ),
+                          child: Text(
+                            news.sports,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    
+                    const SizedBox(height: 3),
+                    
                     Text(
-                      news.title, // Ambil dari object news
+                      news.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        height: 1.2,
                       ),
                     ),
+                    
                     const SizedBox(height: 4),
+                    
                     Text(
                       "${news.newsViews} Views • ${news.author}", 
                       style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white,
                         fontSize: 12,
                       ),
                     ),

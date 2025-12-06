@@ -86,7 +86,7 @@ class ArenaInvictaDrawer extends StatelessWidget {
 
           // --- TAMBAHKAN MENU NEWS DI SINI ---
           ListTile(
-            leading: const Icon(Icons.newspaper_rounded, color: ArenaColor.dragonFruit),
+            leading: const Icon(Icons.newspaper_rounded, color: Colors.white,),
             title: const Text('Latest News', style: TextStyle(color: Colors.white)),
             onTap: () {
               // Tutup drawer dulu
@@ -140,7 +140,7 @@ class ArenaInvictaDrawer extends StatelessWidget {
                       
                       String message = response['message'] ?? "Berhasil Logout!";
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(message), backgroundColor: Colors.greenAccent,),
+                        SnackBar(content: Text(message, style: const TextStyle(color: Colors.black)), backgroundColor: Colors.greenAccent,),
                       );
                       
                       Navigator.pushReplacementNamed(context, MyApp.routeName);

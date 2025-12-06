@@ -2,6 +2,7 @@ import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -85,7 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
               Container(
                 decoration: BoxDecoration(
-                  color: ArenaColor.darkAmethystLight.withOpacity(0.8),
+                  color: ArenaColor.darkAmethyst.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(20), // Lebih bulat
                   border: Border.all(
                     color: ArenaColor.purpleX11.withOpacity(0.5),
@@ -108,6 +109,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration(
                             "Choose a unique username",
                           ),
@@ -120,7 +122,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Password"),
                         TextFormField(
                           controller: _passwordController,
+                          style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Min. 8 characters")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -148,7 +152,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildLabel("Confirm Password"),
                         TextFormField(
                           controller: _confirmPasswordController,
+                          style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscureConfirmPassword,
+                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Re-enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -175,26 +181,45 @@ class _RegisterPageState extends State<RegisterPage> {
                         // --- Role Selection ---
                         _buildLabel("Your Role"),
                         DropdownButtonFormField<String>(
+                          dropdownColor: ArenaColor.darkAmethyst,
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
                           decoration: _inputDecoration("Select your role"),
+                          hint: Text(
+                            "Select your role", 
+                            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.3))
+                          ),
                           initialValue: _selectedRole,
                           items: _roleOptions.map((String role) {
                             return DropdownMenuItem<String>(
                               value: role,
                               child: Text(
                                 role,
-                                style: const TextStyle(
-                                  fontSize: 13,
+                                style: GoogleFonts.poppins(
                                   color: Colors.white,
+                                  fontSize: 13,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             );
                           }).toList(),
-                          onChanged: (val) =>
-                              setState(() => _selectedRole = val),
-                          validator: (value) =>
-                              value == null ? "Please select a role" : null,
-                          isExpanded: true,
+                          selectedItemBuilder: (context) {
+                            return _roleOptions.map((role) {
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  role,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList();
+                          },
+                          onChanged: (val) => setState(() => _selectedRole = val),
+                          validator: (value) => value == null ? "Please select a role" : null,
                         ),
                         const SizedBox(height: 32),
 
@@ -245,7 +270,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         const SnackBar(
                                           behavior: SnackBarBehavior.floating,
                                           margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
-                                          content: Text("Welcome to the Arena!"),
+                                          content: Text("Welcome to the Arena!", style: TextStyle(color: Colors.black),),
                                           backgroundColor: Colors.greenAccent,
                                         ),
                                       );
@@ -259,6 +284,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                           content: Text(
                                             response['message'] ??
                                                 "Registration Failed",
+                                            style: TextStyle(color: Colors.black),
                                           ),
                                           backgroundColor: Colors.red,
                                         ),

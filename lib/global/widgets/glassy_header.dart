@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
-import 'package:arena_invicta_mobile/main.dart'; // Untuk akses UserProvider & UserRole
+import 'package:arena_invicta_mobile/main.dart';
 
 class GlassyHeader extends StatelessWidget {
   final UserProvider userProvider;
@@ -23,7 +23,6 @@ class GlassyHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Tentukan Role Text
     String roleText = "Guest";
     if (userProvider.isLoggedIn) {
       if (userProvider.role == UserRole.admin) roleText = "Admin";
@@ -44,8 +43,8 @@ class GlassyHeader extends StatelessWidget {
             padding: EdgeInsets.only(
               top: MediaQuery.of(context).padding.top + 10,
               bottom: 20,
-              left: 24,
-              right: 24,
+              left: 10, 
+              right: 20,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -74,7 +73,10 @@ class GlassyHeader extends StatelessWidget {
                         ),
                       ),
                     
-                    const SizedBox(width: 16),
+                    // Jika itu icon back, kasih jarak sedikit
+                    if (!isHome) const SizedBox(width: 16),
+                    // Jika itu icon burger, kasih jarak lebih sedikit
+                    if (isHome) const SizedBox(width: 8),
                     
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,29 +126,7 @@ class GlassyHeader extends StatelessWidget {
                   )
                 else
                   Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.outfit(fontSize: 14, color: Colors.white),
-                              children: [
-                                const TextSpan(text: "Hi, ", style: TextStyle(fontWeight: FontWeight.w300)),
-                                TextSpan(
-                                  text: userProvider.username,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            roleText,
-                            style: GoogleFonts.outfit(fontSize: 10, color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
+                    children: [                      
                       CircleAvatar(
                         radius: 18,
                         backgroundColor: ArenaColor.purpleX11,

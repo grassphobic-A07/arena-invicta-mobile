@@ -1,5 +1,4 @@
 // ignore_for_file: deprecated_member_use
-import 'dart:convert';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -187,7 +186,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: ArenaColor.darkAmethystLight,
+          color: ArenaColor.darkAmethystLight.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withOpacity(0.5))
         ),
@@ -213,7 +212,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ArenaColor.darkAmethystLight,
+        color: ArenaColor.darkAmethystLight.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white10),
       ),
@@ -283,7 +282,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               )              
               : DropdownButton<String>(
                 value: role,
-                dropdownColor: ArenaColor.darkAmethystLight,
+                dropdownColor: ArenaColor.darkAmethystLight.withOpacity(0.2),
                 style: const TextStyle(color: Colors.white, fontSize: 12),
                 underline: Container(),
                 items: const [
@@ -315,7 +314,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          backgroundColor: ArenaColor.darkAmethystLight,
+                          backgroundColor: ArenaColor.darkAmethystLight.withOpacity(0.2),
                           title: const Text("Hapus User?", style: TextStyle(color: Colors.white)),
                           content: Text("Yakin ingin menghapus ${user['username']}?", style: const TextStyle(color: Colors.white70)),
                           actions: [
@@ -345,7 +344,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: ArenaColor.darkAmethystLight,
+        color: ArenaColor.darkAmethystLight.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: ArenaColor.purpleX11), // Border Ungu Terang
       ),
