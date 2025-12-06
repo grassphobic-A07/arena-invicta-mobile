@@ -124,7 +124,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _passwordController,
                           style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
-                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Min. 8 characters")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -154,7 +153,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _confirmPasswordController,
                           style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscureConfirmPassword,
-                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Re-enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(

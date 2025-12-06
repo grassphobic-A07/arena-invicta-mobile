@@ -13,12 +13,14 @@ class PublicQuizDetailEntry {
     String title;
     String description;
     List<Question> questions;
+    List<Leaderboard> leaderboard;
 
     PublicQuizDetailEntry({
         required this.id,
         required this.title,
         required this.description,
         required this.questions,
+        required this.leaderboard,
     });
 
     factory PublicQuizDetailEntry.fromJson(Map<String, dynamic> json) => PublicQuizDetailEntry(
@@ -26,6 +28,7 @@ class PublicQuizDetailEntry {
         title: json["title"],
         description: json["description"],
         questions: List<Question>.from(json["questions"].map((x) => Question.fromJson(x))),
+        leaderboard: List<Leaderboard>.from(json["leaderboard"].map((x) => Leaderboard.fromJson(x))),
     );
 
     Map<String, dynamic> toJson() => {
@@ -33,6 +36,27 @@ class PublicQuizDetailEntry {
         "title": title,
         "description": description,
         "questions": List<dynamic>.from(questions.map((x) => x.toJson())),
+        "leaderboard": List<dynamic>.from(leaderboard.map((x) => x.toJson())),
+    };
+}
+
+class Leaderboard {
+    String user;
+    int score;
+
+    Leaderboard({
+        required this.user,
+        required this.score,
+    });
+
+    factory Leaderboard.fromJson(Map<String, dynamic> json) => Leaderboard(
+        user: json["user"],
+        score: json["score"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "user": user,
+        "score": score,
     };
 }
 

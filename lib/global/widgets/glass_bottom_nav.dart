@@ -1,8 +1,6 @@
 import 'dart:ui';
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 
 class GlassBottomNavBar extends StatelessWidget {

@@ -132,7 +132,6 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _passwordController,
                           style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
-                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(
