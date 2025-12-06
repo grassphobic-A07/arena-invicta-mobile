@@ -3,8 +3,8 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; 
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; 
 import 'package:arena_invicta_mobile/hannan_quiz/screens/create_quiz_screen.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/private_quiz_list.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/public_quiz_list.dart';
+import 'package:arena_invicta_mobile/hannan_quiz/widgets/private_quiz_list.dart';
+import 'package:arena_invicta_mobile/hannan_quiz/widgets/public_quiz_list.dart';
 import 'package:arena_invicta_mobile/main.dart'; 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -142,7 +142,7 @@ class _QuizMainPageState extends State<QuizMainPage> {
           ),
         ],
       ),
-      // FLOATING ACTION BUTTON
+      // Floating Action Button
       floatingActionButton: isStaff ? Padding(
         padding: const EdgeInsets.only(bottom: 100),
         child: FloatingActionButton.extended(

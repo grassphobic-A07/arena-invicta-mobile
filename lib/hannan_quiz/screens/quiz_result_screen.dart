@@ -10,7 +10,7 @@ class QuizResultScreen extends StatelessWidget {
   final String quizTitle;
   final int score;
   final int total;
-  final List<dynamic> leaderboardData; // New parameter
+  final List<dynamic> leaderboardData;
 
   const QuizResultScreen({
     super.key, 
@@ -82,7 +82,7 @@ class QuizResultScreen extends StatelessWidget {
                       
                       const SizedBox(height: 40),
                       
-                      // LEADERBOARD SECTION
+                      // Leaderboard section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24.0),
                         child: Column(

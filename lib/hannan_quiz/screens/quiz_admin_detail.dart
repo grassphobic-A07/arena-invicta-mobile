@@ -3,7 +3,7 @@ import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart';
 import 'package:arena_invicta_mobile/hannan_quiz/models/private_quiz_detail_model.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/create_quiz_screen.dart'; // Import CreateQuiz for Edit
+import 'package:arena_invicta_mobile/hannan_quiz/screens/create_quiz_screen.dart'; 
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,8 +19,6 @@ class QuizAdminDetail extends StatefulWidget {
 }
 
 class _QuizAdminDetailState extends State<QuizAdminDetail> {
-  // We don't need _cachedData anymore because CreateQuizScreen fetches its own full data
-
   Future<PrivateQuizDetailEntry?> fetchAdminDetails(CookieRequest request) async {
     try {
       final response = await request.get('$baseUrl/quiz/api/${widget.quizId}/admin/');
