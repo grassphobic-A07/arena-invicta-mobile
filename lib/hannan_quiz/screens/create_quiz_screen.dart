@@ -199,11 +199,6 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                       
                       const SizedBox(height: 24),
                       _buildSectionTitle("Questions"),
-                      if(_isEditMode) 
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Text("Note: Editing replaces all questions.", style: TextStyle(color: Colors.orange, fontSize: 12)),
-                        ),
                       
                       ListView.separated(
                         shrinkWrap: true,
