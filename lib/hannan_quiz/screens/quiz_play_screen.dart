@@ -103,50 +103,6 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
     }
   }
 
-  void _showResultDialog(int score, int total) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: ArenaColor.darkAmethystLight.withOpacity(0.95),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: ArenaColor.dragonFruit.withOpacity(0.5)),
-            boxShadow: [
-              BoxShadow(color: ArenaColor.dragonFruit.withOpacity(0.2), blurRadius: 20)
-            ]
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.emoji_events_rounded, size: 60, color: Colors.amber),
-              const SizedBox(height: 16),
-              Text("Quiz Completed!", style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 8),
-              Text("You scored $score out of $total", style: const TextStyle(color: Colors.white70)),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ArenaColor.dragonFruit,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                onPressed: () {
-                  Navigator.pop(context); // Close Dialog
-                  Navigator.pop(context); // Return to list
-                },
-                child: const Text("Return to Arena"),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildGlowCircle(Color color) {
     return Container(
       width: 300, height: 300,

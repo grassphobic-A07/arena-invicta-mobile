@@ -1,7 +1,6 @@
 import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/hannan_quiz/models/public_quiz_list_model.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_play_screen.dart';
 import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_start_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
