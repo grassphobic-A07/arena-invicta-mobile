@@ -85,7 +85,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       if (mounted) {
         if (response['ok'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Berita berhasil dihapus"), backgroundColor: Colors.green)
+            const SnackBar(content: Text("Berita berhasil dihapus", style: TextStyle(color: Colors.black)), backgroundColor: Colors.green)
           );
           Navigator.pop(context, true); 
         } else {

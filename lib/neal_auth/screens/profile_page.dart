@@ -103,7 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
         // context.read<UserProvider>().refreshUserData(...);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profil berhasil diperbarui!"), backgroundColor: Colors.greenAccent,),
+          const SnackBar(content: Text("Profil berhasil diperbarui!", style: TextStyle(color: Colors.black),), backgroundColor: Colors.greenAccent,),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: ArenaColor.darkAmethystLight,
+        backgroundColor: ArenaColor.darkAmethystLight.withOpacity(0.2),
         title: const Text("Hapus Akun?", style: TextStyle(color: Colors.white)),
         content: const Text(
           "Aksi ini tidak dapat dibatalkan. Semua data Anda akan hilang.",
@@ -298,7 +298,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: CircleAvatar(
                               radius: 65,
-                              backgroundColor: ArenaColor.darkAmethystLight,
+                              backgroundColor: ArenaColor.darkAmethystLight.withOpacity(0.2),
                               backgroundImage:
                                   (_userProfile!.avatarUrl.isNotEmpty)
                                   ? NetworkImage(_userProfile!.avatarUrl)
@@ -477,13 +477,13 @@ class _ProfilePageState extends State<ProfilePage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: ArenaColor.darkAmethystLight,
+          color: ArenaColor.darkAmethystLight.withOpacity(0.2),
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -492,27 +492,36 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.5)),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withOpacity(0.6),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               controller.text.isEmpty ? "-" : controller.text,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
       );
     }
 
-    // Tampilan Edit Mode
+    // --- EDIT MODE (samakan dengan login/register) ---
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 8),
@@ -521,28 +530,34 @@ class _ProfilePageState extends State<ProfilePage> {
           enabled: enabled,
           maxLines: maxLines,
           onChanged: onChanged,
+          style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
             filled: true,
-            fillColor: ArenaColor.darkAmethystLight,
+            fillColor: const Color(0xFF140C33), // ungu gelap, bukan hitam
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 0.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: ArenaColor.darkAmethyst,
-                width: 1.5,
+                color: Colors.white.withOpacity(0.10),
+                width: 1.2,
               ),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+              borderSide:
+                  BorderSide(color: ArenaColor.dragonFruit, width: 2),
             ),
           ),
           validator: (value) {
-            if (label == "Display Name" && (value == null || value.isEmpty)) {
+            if (label == "Display Name" &&
+                (value == null || value.isEmpty)) {
               return "Nama tampilan tidak boleh kosong";
             }
             return null;

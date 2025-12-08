@@ -32,7 +32,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String _selectedSport = "All";
-  final List<String> _sportsFilters = ["All", "football", "basketball", "tennis", "volleyball", "motogp"];
+  final List<String> _sportsFilters = ["All", "Football", "Basketball", "Tennis", "Volleyball", "Motogp"];
 
   @override
   void initState() {

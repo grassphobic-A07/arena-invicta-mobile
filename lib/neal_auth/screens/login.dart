@@ -56,13 +56,19 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: screenHeight * 0.02),
 
               // --- LOGO / JUDUL ---
-              const Icon(
-                Icons.gamepad, // Bisa ganti logo aplikasi nanti
-                size: 60,
-                color: ArenaColor.dragonFruit,
+              Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.width * 0.4,
+                padding: const EdgeInsets.all(20),
+                child: ClipOval(
+                  child: Image.asset(
+                    "assets/images/arena-invicta.png",
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 5),
               const Text(
                 'ARENA INVICTA',
                 textAlign: TextAlign.center,
@@ -73,9 +79,10 @@ class _LoginPageState extends State<LoginPage> {
                   letterSpacing: 1,
                 ),
               ),
+
               const Text(
                 'Welcome back, Player.',
-                style: TextStyle(fontSize: 14, color: Colors.white70),
+                style: TextStyle(fontSize: 24, color: ArenaColor.dragonFruit, fontWeight: FontWeight.w800),
               ),
 
               const SizedBox(height: 40),
@@ -83,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
               // --- CARD FORM ---
               Container(
                 decoration: BoxDecoration(
-                  color: ArenaColor.darkAmethystLight.withOpacity(0.8),
+                  color: ArenaColor.darkAmethyst.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: ArenaColor.purpleX11.withOpacity(0.5),
@@ -123,8 +130,8 @@ class _LoginPageState extends State<LoginPage> {
                         _buildLabel("Password"),
                         TextFormField(
                           controller: _passwordController,
+                          style: TextStyle(color: ArenaColor.textWhite),
                           obscureText: _obscurePassword,
-                          style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Enter your password")
                               .copyWith(
                                 suffixIcon: IconButton(
@@ -217,7 +224,7 @@ class _LoginPageState extends State<LoginPage> {
                                         const SnackBar(
                                           behavior: SnackBarBehavior.floating,
                                           margin: EdgeInsets.only(bottom: 90, left: 16, right: 16),
-                                          content: Text("Login Berhasil!"),
+                                          content: Text("Login Berhasil!", style: TextStyle(color: Colors.black),),
                                           backgroundColor: Colors.greenAccent,
                                         ),
                                       );
@@ -298,7 +305,7 @@ class _LoginPageState extends State<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? "),
+                  const Text("Don't have an account? ", style: TextStyle(color: Colors.white),),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacement(

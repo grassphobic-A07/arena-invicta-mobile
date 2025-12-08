@@ -140,7 +140,7 @@ class ArenaInvictaDrawer extends StatelessWidget {
                       
                       String message = response['message'] ?? "Berhasil Logout!";
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(message), backgroundColor: Colors.greenAccent,),
+                        SnackBar(content: Text(message, style: const TextStyle(color: Colors.black)), backgroundColor: Colors.greenAccent,),
                       );
                       
                       Navigator.pushReplacementNamed(context, MyApp.routeName);

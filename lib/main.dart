@@ -365,7 +365,7 @@ class _HomePageState extends State<HomePage> {
 
           // 3. HEADER & NAVBAR
           GlassyHeader(userProvider: userProvider, scaffoldKey: _scaffoldKey, isHome: true, title: "Arena Invicta"),
-          GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
+          GlassyNavbar(userProvider: userProvider, isHome: true, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
         ],
       ),
     );
