@@ -394,7 +394,7 @@ class _RegisterPageState extends State<RegisterPage> {
       // ignore: deprecated_member_use
       filled: true,
       fillColor: Colors.black.withOpacity(0.2), // Isi field agak abu sangat muda
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
         borderSide: BorderSide.none,
