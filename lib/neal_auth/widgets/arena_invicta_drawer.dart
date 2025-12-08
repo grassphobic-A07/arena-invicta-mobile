@@ -84,7 +84,6 @@ class ArenaInvictaDrawer extends StatelessWidget {
             },
           ),
 
-          // --- TAMBAHKAN MENU NEWS DI SINI ---
           ListTile(
             leading: const Icon(Icons.newspaper_rounded, color: Colors.white,),
             title: const Text('Latest News', style: TextStyle(color: Colors.white)),
@@ -98,7 +97,6 @@ class ArenaInvictaDrawer extends StatelessWidget {
               );
             },
           ),
-          // -----------------------------------
 
           if (userProvider.isLoggedIn) ... [
             Padding(
@@ -118,15 +116,6 @@ class ArenaInvictaDrawer extends StatelessWidget {
                   );
                 },
               ),
-              
-            ListTile(
-              leading: const Icon(Icons.account_circle, color: ArenaColor.purpleX11),
-              title: const Text('My Profile', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context); 
-                Navigator.pushNamed(context, ProfilePage.routeName);
-              },
-            ),
 
             ListTile(
               leading: const Icon(Icons.logout_rounded, color: Colors.redAccent,),

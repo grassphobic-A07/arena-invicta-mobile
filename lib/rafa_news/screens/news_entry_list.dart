@@ -163,7 +163,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                                     child: Text(
                                       sport, 
                                       style: GoogleFonts.outfit(
-                                        color: isSelected ? ArenaColor.dragonFruit : Colors.white,
+                                        color: Colors.white.withOpacity(0.8),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),

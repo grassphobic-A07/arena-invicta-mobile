@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
@@ -84,7 +85,7 @@ class GlassyHeader extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.poppins(
                             color: ArenaColor.dragonFruit,
                             fontSize: isHome ? 14 : 10,
                             fontWeight: FontWeight.w600,
@@ -94,7 +95,7 @@ class GlassyHeader extends StatelessWidget {
                         if (subtitle.isNotEmpty)
                           Text(
                             subtitle,
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -113,7 +114,7 @@ class GlassyHeader extends StatelessWidget {
                       children: [
                         Text(
                           "Login",
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -125,25 +126,83 @@ class GlassyHeader extends StatelessWidget {
                     ),
                   )
                 else
-                  Row(
-                    children: [                      
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: ArenaColor.purpleX11,
-                        backgroundImage: (userProvider.avatarUrl != null && userProvider.avatarUrl!.isNotEmpty)
-                            ? NetworkImage(userProvider.avatarUrl!)
-                            : null,
-                        child: (userProvider.avatarUrl == null || userProvider.avatarUrl!.isEmpty)
-                            ? Text(
-                                userProvider.username.isNotEmpty
-                                    ? userProvider.username[0].toUpperCase()
-                                    : "U",
-                                style: const TextStyle(
-                                    fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
-                              )
-                            : null,
-                      )
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        
+                        // --- LOGIC: Tampilkan Teks HANYA jika isHome == true ---
+                        if (isHome) ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    "Hi, ",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    userProvider.username,
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                roleText,
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        // -------------------------------------------------------
+
+                        // FOTO PROFIL (SELALU MUNCUL)
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProfilePage(),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: ArenaColor.purpleX11,
+                            backgroundImage: (userProvider.avatarUrl != null &&
+                                    userProvider.avatarUrl!.isNotEmpty)
+                                ? NetworkImage(userProvider.avatarUrl!)
+                                : null,
+                            child: (userProvider.avatarUrl == null ||
+                                    userProvider.avatarUrl!.isEmpty)
+                                ? Text(
+                                    userProvider.username.isNotEmpty
+                                        ? userProvider.username[0].toUpperCase()
+                                        : "U",
+                                    style: GoogleFonts.poppins( // Konsisten fontnya
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                : null,
+                          ),
+                        )
+                      ],
+                    ),
                   ),
               ],
             ),
