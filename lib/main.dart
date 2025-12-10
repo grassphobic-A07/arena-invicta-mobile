@@ -20,9 +20,8 @@ import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart';
-import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart'; 
+import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart';
 import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart'; 
-import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_tile.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -190,7 +189,6 @@ class _HomePageState extends State<HomePage> {
     final request = context.watch<CookieRequest>();
     
     // --- CEK PERMISSION ---
-    // Hanya Staff (Writer) atau Admin yang bisa melihat tombol Add News
     bool canCreate = userProvider.isLoggedIn && 
         (userProvider.role == UserRole.staff || userProvider.role == UserRole.admin);
 
@@ -230,12 +228,12 @@ class _HomePageState extends State<HomePage> {
                       
                       // --- A. CAROUSEL SECTION ---
                       SizedBox(
-                        height: 250, 
+                        height: 200, 
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
                              Positioned(
-                               top: -20,
+                               top: -60,
                                left: 0, 
                                right: 0,
                                height: 250,
@@ -259,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 15),
 
                       // --- B. SPORTS CHIPS ---
                       SizedBox(
@@ -312,9 +310,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 0),
 
-                      // --- C. LIST SECTION ---
+                      // --- C. LIST SECTION (TRENDING) ---
                       _buildSectionTitle("Trending News"),
 
                       if (trendingData.isNotEmpty) ...[
@@ -324,12 +322,15 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                  child: NewsEntryTile( 
+                                  
+                                  // --- CHANGE IS HERE: BACK TO NewsEntryCard ---
+                                  child: NewsEntryCard( 
                                     news: news,
                                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))),
                                   ),
+                                  // -------------------------------------------
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 24), // Jarak antar card lebih besar biar lega
                               ],
                             );
                           }).toList(),
@@ -380,18 +381,17 @@ class _HomePageState extends State<HomePage> {
           // 4. NAVBAR
           GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
 
-          // 5. TOMBOL ADD NEWS (HANYA UNTUK WRITER / ADMIN)
+          // 5. TOMBOL ADD NEWS
           if (canCreate)
             Positioned(
-              bottom: 130, // Jarak dari bawah (di atas navbar)
-              right: 24,   // Jarak dari kanan (sedikit masuk)
+              bottom: 130, 
+              right: 24, 
               child: FloatingActionButton(
                 onPressed: () async {
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const NewsFormPage()),
                   );
-                  // Refresh Home jika berhasil buat berita
                   if (result == true) {
                     setState(() {});
                   }

@@ -8,7 +8,7 @@ import 'package:arena_invicta_mobile/main.dart';
 
 class GlassyHeader extends StatelessWidget {
   final UserProvider userProvider;
-  final GlobalKey<ScaffoldState>? scaffoldKey; // Hanya perlu jika isHome = true
+  final GlobalKey<ScaffoldState>? scaffoldKey;
   final bool isHome;
   final String title;
   final String subtitle;
@@ -17,7 +17,7 @@ class GlassyHeader extends StatelessWidget {
     super.key,
     required this.userProvider,
     this.scaffoldKey,
-    this.isHome = true, // Defaultnya Home
+    this.isHome = true,
     this.title = "Arena Invicta",
     this.subtitle = "", 
   });
@@ -42,10 +42,14 @@ class GlassyHeader extends StatelessWidget {
           child: Container(
             color: ArenaColor.darkAmethyst.withOpacity(0.3),
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 10,
-              bottom: 20,
-              left: 10, 
-              right: 20,
+              
+              // --- LOGIKA POSISI HEADER (YANG KAMU MINTA) ---
+              // Jika Login: + 5 (Naik dikit)
+              // Jika Belum: + 10 (Standar, ga ikutan naik)
+              top: 10, 
+              bottom: 10, 
+              left: 8, 
+              right: 24, 
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -53,7 +57,6 @@ class GlassyHeader extends StatelessWidget {
                 // --- KIRI: ICON & JUDUL ---
                 Row(
                   children: [
-                    // Jika Home -> Burger Menu, Jika Tidak -> Back Button
                     if (isHome)
                       IconButton(
                         padding: EdgeInsets.zero,
@@ -74,9 +77,7 @@ class GlassyHeader extends StatelessWidget {
                         ),
                       ),
                     
-                    // Jika itu icon back, kasih jarak sedikit
-                    if (!isHome) const SizedBox(width: 16),
-                    // Jika itu icon burger, kasih jarak lebih sedikit
+                    if (!isHome) const SizedBox(width: 12),
                     if (isHome) const SizedBox(width: 8),
                     
                     Column(
@@ -85,9 +86,9 @@ class GlassyHeader extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.outfit(
                             color: ArenaColor.dragonFruit,
-                            fontSize: isHome ? 14 : 10,
+                            fontSize: isHome ? 18 : 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: isHome ? 0.5 : 1.5,
                           ),
@@ -95,7 +96,7 @@ class GlassyHeader extends StatelessWidget {
                         if (subtitle.isNotEmpty)
                           Text(
                             subtitle,
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -108,26 +109,30 @@ class GlassyHeader extends StatelessWidget {
 
                 // --- KANAN: LOGIN / PROFILE ---
                 if (!userProvider.isLoggedIn)
-                  GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, LoginPage.routeName),
-                    child: Row(
-                      children: [
-                        Text(
-                          "Login",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, LoginPage.routeName),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Login",
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.login_rounded, color: Colors.white, size: 20),
-                      ],
+                          const SizedBox(width: 4),
+                          const Icon(Icons.login_rounded, color: Colors.white, size: 20),
+                        ],
+                      ),
                     ),
                   )
                 else
+                  // Tambahkan Padding di sini untuk mengatur jarak atas/bawah saat user login
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.only(bottom: 8.0), // Sesuaikan angka 8.0 ini
                     child: Row(
                       children: [
                         
@@ -168,7 +173,6 @@ class GlassyHeader extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                         ],
-                        // -------------------------------------------------------
 
                         // FOTO PROFIL (SELALU MUNCUL)
                         GestureDetector(
@@ -193,7 +197,7 @@ class GlassyHeader extends StatelessWidget {
                                     userProvider.username.isNotEmpty
                                         ? userProvider.username[0].toUpperCase()
                                         : "U",
-                                    style: GoogleFonts.poppins( // Konsisten fontnya
+                                    style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold),
