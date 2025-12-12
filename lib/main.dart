@@ -23,6 +23,8 @@ import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart';
 import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart';
 import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart'; 
 
+import 'package:arena_invicta_mobile/adam_discussions/widgets/hot_discussions_section.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -233,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                           clipBehavior: Clip.none,
                           children: [
                              Positioned(
-                               top: -60,
+                               top: -30,
                                left: 0, 
                                right: 0,
                                height: 250,
@@ -257,7 +259,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 40),
 
                       // --- B. SPORTS CHIPS ---
                       SizedBox(
@@ -354,18 +356,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 16),
                       _buildSectionTitle("Hot Discussions"),
 
-                      _buildDiscussionCard(
-                        title: "Kenapa Bumi Bulat?", 
-                        topic: "Sains", 
-                        count: "70", 
-                        imageUrl: "https://images.unsplash.com/photo-1614730341194-75c607400070?q=80&w=200&auto=format&fit=crop"
-                      ),
-                      _buildDiscussionCard(
-                        title: "Kenapa MC Kotak?", 
-                        topic: "Gaming", 
-                        count: "69", 
-                        imageUrl: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?q=80&w=200&auto=format&fit=crop"
-                      ),
+                      const HotDiscussionsSection(),
                       
                       const SizedBox(height: 80),
                     ],

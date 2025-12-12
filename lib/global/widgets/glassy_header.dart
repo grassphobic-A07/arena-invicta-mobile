@@ -41,13 +41,10 @@ class GlassyHeader extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             color: ArenaColor.darkAmethyst.withOpacity(0.3),
+            // PADDING INI BERLAKU UNTUK SEMUA KONDISI (LOGIN / GUEST)
             padding: EdgeInsets.only(
-              
-              // --- LOGIKA POSISI HEADER (YANG KAMU MINTA) ---
-              // Jika Login: + 5 (Naik dikit)
-              // Jika Belum: + 10 (Standar, ga ikutan naik)
-              top: 10, 
-              bottom: 10, 
+              top: MediaQuery.of(context).padding.top + 10, // Tetap +10 agar aman dari status bar
+              bottom: 5, // Padding bawah standar agar tidak terlalu mepet
               left: 8, 
               right: 24, 
             ),
@@ -109,104 +106,99 @@ class GlassyHeader extends StatelessWidget {
 
                 // --- KANAN: LOGIN / PROFILE ---
                 if (!userProvider.isLoggedIn)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
-                    child: GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, LoginPage.routeName),
-                      child: Row(
-                        children: [
-                          Text(
-                            "Login",
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                  // TOMBOL LOGIN (GUEST)
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, LoginPage.routeName),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Login",
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.login_rounded, color: Colors.white, size: 20),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.login_rounded, color: Colors.white, size: 20),
+                      ],
                     ),
                   )
                 else
-                  // Tambahkan Padding di sini untuk mengatur jarak atas/bawah saat user login
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0), // Sesuaikan angka 8.0 ini
-                    child: Row(
-                      children: [
-                        
-                        // --- LOGIC: Tampilkan Teks HANYA jika isHome == true ---
-                        if (isHome) ...[
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    "Hi, ",
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
+                  // USER PROFILE (LOGGED IN)
+                  // Tidak ada padding khusus di sini, mengikuti container induk
+                  Row(
+                    children: [
+                      // Teks Hi & Role (Hanya di Home)
+                      if (isHome) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "Hi, ",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 14,
                                   ),
-                                  Text(
-                                    userProvider.username,
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                roleText,
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
                                 ),
+                                Text(
+                                  userProvider.username,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              roleText,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-
-                        // FOTO PROFIL (SELALU MUNCUL)
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ProfilePage(),
-                              ),
-                            );
-                          },
-                          child: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: ArenaColor.purpleX11,
-                            backgroundImage: (userProvider.avatarUrl != null &&
-                                    userProvider.avatarUrl!.isNotEmpty)
-                                ? NetworkImage(userProvider.avatarUrl!)
-                                : null,
-                            child: (userProvider.avatarUrl == null ||
-                                    userProvider.avatarUrl!.isEmpty)
-                                ? Text(
-                                    userProvider.username.isNotEmpty
-                                        ? userProvider.username[0].toUpperCase()
-                                        : "U",
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                : null,
-                          ),
-                        )
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
                       ],
-                    ),
+
+                      // Foto Profil (Klik ke Profile)
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProfilePage(),
+                            ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: ArenaColor.purpleX11,
+                          backgroundImage: (userProvider.avatarUrl != null &&
+                                  userProvider.avatarUrl!.isNotEmpty)
+                              ? NetworkImage(userProvider.avatarUrl!)
+                              : null,
+                          child: (userProvider.avatarUrl == null ||
+                                  userProvider.avatarUrl!.isEmpty)
+                              ? Text(
+                                  userProvider.username.isNotEmpty
+                                      ? userProvider.username[0].toUpperCase()
+                                      : "U",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                )
+                              : null,
+                        ),
+                      )
+                    ],
                   ),
               ],
             ),
