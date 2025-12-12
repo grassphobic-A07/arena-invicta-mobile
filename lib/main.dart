@@ -144,47 +144,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDiscussionCard({required String title, required String topic, required String count, required String imageUrl}) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ArenaColor.darkAmethystLight.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              width: 60, height: 60, fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(width: 60, height: 60, color: Colors.grey.withOpacity(0.2)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(topic, style: TextStyle(color: Colors.white54, fontSize: 12)),
-              ],
-            ),
-          ),
-          Column(
-            children: [
-              const Icon(Icons.keyboard_arrow_up_rounded, color: ArenaColor.dragonFruit),
-              Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
