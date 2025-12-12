@@ -5,6 +5,9 @@ import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
 
+// --- TAMBAHKAN IMPORT INI ---
+import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
+
 class GlassyNavbar extends StatelessWidget {
   final UserProvider userProvider;
   final VoidCallback onFabTap; // Fungsi ketika tombol tengah ditekan
@@ -63,9 +66,15 @@ class GlassyNavbar extends StatelessWidget {
                 if (userProvider.isLoggedIn)
                   IconButton(
                     tooltip: "Quiz",
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Quiz Coming Soon!")),
-                    ),
+                    onPressed: () {
+                      // --- NAVIGASI KE QUIZ MAIN PAGE ---
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QuizMainPage(),
+                        ),
+                      );
+                    },
                     icon: const Icon(
                       Icons.sports_esports_rounded,
                       color: Colors.white54,
@@ -77,10 +86,6 @@ class GlassyNavbar extends StatelessWidget {
                 IconButton(
                   tooltip: "Discussions",
                   onPressed: () {
-                    // OPSI A: Jika DiscussionsPage punya static const routeName
-                    // Navigator.pushNamed(context, DiscussionsPage.routeName);
-
-                    // OPSI B: Navigasi langsung (Paling aman jika route belum didaftarkan di main.dart)
                     Navigator.push(
                       context,
                       MaterialPageRoute(
