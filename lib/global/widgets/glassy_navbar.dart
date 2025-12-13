@@ -4,21 +4,32 @@ import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
-
-// --- TAMBAHKAN IMPORT INI ---
 import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
 
 class GlassyNavbar extends StatelessWidget {
   final UserProvider userProvider;
-  final VoidCallback onFabTap; // Fungsi ketika tombol tengah ditekan
-  final IconData fabIcon; // Icon tombol tengah
+  final VoidCallback onFabTap; 
+  final IconData fabIcon; 
+  final bool isHome; // NEW: Determines navigation behavior
 
   const GlassyNavbar({
     super.key,
     required this.userProvider,
     required this.onFabTap,
     this.fabIcon = Icons.home_rounded,
+    this.isHome = false, // Default is false (Feature page)
   });
+
+  // Helper to choose Push vs PushReplacement
+  void _navigate(BuildContext context, Widget page) {
+    if (isHome) {
+      // From Home: Stack it
+      Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+    } else {
+      // From Feature: Swap it
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => page));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,33 +77,15 @@ class GlassyNavbar extends StatelessWidget {
                 if (userProvider.isLoggedIn)
                   IconButton(
                     tooltip: "Quiz",
-                    onPressed: () {
-                      // --- NAVIGASI KE QUIZ MAIN PAGE ---
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const QuizMainPage(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.sports_esports_rounded,
-                      color: Colors.white54,
-                    ),
+                    onPressed: () => _navigate(context, const QuizMainPage()),
+                    icon: const Icon(Icons.sports_esports_rounded, color: Colors.white54),
                   )
                 else
                   const SizedBox(width: 48, height: 48),
 
                 IconButton(
                   tooltip: "Discussions",
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DiscussionsPage(),
-                      ),
-                    );
-                  },
+                  onPressed: () => _navigate(context, const DiscussionsPage()),
                   icon: const Icon(Icons.forum_rounded, color: Colors.white54),
                 ),
 
@@ -103,21 +96,18 @@ class GlassyNavbar extends StatelessWidget {
                   onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("League Coming Soon!")),
                   ),
-                  icon: const Icon(
-                    Icons.emoji_events_rounded,
-                    color: Colors.white54,
-                  ),
+                  icon: const Icon(Icons.emoji_events_rounded, color: Colors.white54),
                 ),
 
                 if (userProvider.isLoggedIn)
                   IconButton(
                     tooltip: "Profile",
-                    onPressed: () =>
-                        Navigator.pushNamed(context, ProfilePage.routeName),
-                    icon: const Icon(
-                      Icons.person_rounded,
-                      color: Colors.white54,
-                    ),
+                    onPressed: () {
+                      // Profile often treated as a modal or separate stack, 
+                      // but keeping it consistent here:
+                      _navigate(context, const ProfilePage());
+                    },
+                    icon: const Icon(Icons.person_rounded, color: Colors.white54),
                   )
                 else
                   const SizedBox(width: 48, height: 48),

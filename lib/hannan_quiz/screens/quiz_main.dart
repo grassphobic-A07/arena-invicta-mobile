@@ -137,6 +137,7 @@ class _QuizMainPageState extends State<QuizMainPage> {
           GlassyNavbar(
             userProvider: userProvider,
             fabIcon: Icons.grid_view_rounded, 
+            isHome: false,
             onFabTap: () => Navigator.pop(context),
           ),
         ],

@@ -329,7 +329,7 @@ class _HomePageState extends State<HomePage> {
           GlassyHeader(userProvider: userProvider, scaffoldKey: _scaffoldKey, isHome: true, title: "Arena Invicta"),
           
           // 4. NAVBAR
-          GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
+          GlassyNavbar(userProvider: userProvider, isHome: true, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
 
           // 5. TOMBOL ADD NEWS
           if (canCreate)
