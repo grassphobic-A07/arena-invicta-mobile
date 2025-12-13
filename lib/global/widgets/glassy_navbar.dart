@@ -88,10 +88,7 @@ class GlassyNavbar extends StatelessWidget {
                   IconButton(
                     tooltip: "Quiz",
                     onPressed: () => _navigate(context, const QuizMainPage()),
-                    icon: Icon(
-                      Icons.sports_esports_rounded,
-                      color: _navColor(NavbarItem.quiz),
-                    ),
+                    icon: Icon(Icons.sports_esports_rounded, color: _navColor(NavbarItem.quiz)),
                   )
                 else
                   const SizedBox(width: 48, height: 48),
@@ -99,10 +96,7 @@ class GlassyNavbar extends StatelessWidget {
                 IconButton(
                   tooltip: "Discussions",
                   onPressed: () => _navigate(context, const DiscussionsPage()),
-                  icon: Icon(
-                    Icons.forum_rounded,
-                    color: _navColor(NavbarItem.discussions),
-                  ),
+                  icon: Icon(Icons.forum_rounded, color: _navColor(NavbarItem.discussions)),
                 ),
 
                 const SizedBox(width: 60), // Spacer Tengah
@@ -112,10 +106,7 @@ class GlassyNavbar extends StatelessWidget {
                   onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("League Coming Soon!")),
                   ),
-                  icon: Icon(
-                    Icons.emoji_events_rounded,
-                    color: _navColor(NavbarItem.league),
-                  ),
+                  icon: Icon(Icons.emoji_events_rounded, color: _navColor(NavbarItem.league)),
                 ),
 
                 if (userProvider.isLoggedIn)
@@ -124,10 +115,7 @@ class GlassyNavbar extends StatelessWidget {
                     onPressed: () {
                       _navigate(context, const ProfilePage());
                     },
-                    icon: Icon(
-                      Icons.person_rounded,
-                      color: _navColor(NavbarItem.profile),
-                    ),
+                    icon: Icon(Icons.person_rounded, color: _navColor(NavbarItem.profile)),
                   )
                 else
                   const SizedBox(width: 48, height: 48),

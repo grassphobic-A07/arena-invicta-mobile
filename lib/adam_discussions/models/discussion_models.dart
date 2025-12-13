@@ -52,7 +52,7 @@ class DiscussionThread {
     final list = <String>[];
     if (newsTitle != null) list.add('News');
     if (upvoteCount > 10) list.add('Populer');
-    if (commentCount == 0) list.add('Belum Dijawab');
+    if (commentCount == 0) list.add('No replies yet');
     return list;
   }
 

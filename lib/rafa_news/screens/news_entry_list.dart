@@ -171,7 +171,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                           children: [
                             Icon(Icons.search_off, size: 50, color: Colors.white24),
                             SizedBox(height: 10),
-                            Text("Tidak ada berita di kategori ini.", style: TextStyle(color: Colors.white38)),
+                            Text("No news in this category.", style: TextStyle(color: Colors.white38)),
                           ],
                         ),
                       ),

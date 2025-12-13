@@ -61,7 +61,7 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
             left: 16,
             right: 16,
           ), 
-          content: const Text('Silakan login untuk membuat diskusi.'),
+          content: const Text('Please log in to create a discussion.'),
           action: SnackBarAction(
             label: 'Login',
             textColor: Colors.white,
@@ -98,7 +98,7 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _error = 'Gagal memuat diskusi: $e';
+        _error = 'Failed to load discussions: $e';
       });
     }
   }
@@ -126,8 +126,8 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
       body: Stack(
         children: [
           // 0. GLOWS (background)
-          Positioned(top: -140, right: -80, child: _buildGlowCircle(ArenaColor.dragonFruit)),
-          Positioned(bottom: -180, left: -120, child: _buildGlowCircle(ArenaColor.purpleX11)),
+          Positioned(top: -120, left: -90, child: _buildGlowCircle(ArenaColor.dragonFruit)),
+          Positioned(bottom: -140, right: -110, child: _buildGlowCircle(ArenaColor.purpleX11)),
 
           // 1. MAIN CONTENT (LIST VIEW)
           // List ini ada di layer paling bawah, jadi dia akan scroll di "belakang" Search Bar
@@ -142,9 +142,9 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
                 children: [
                   if (userProvider.isLoggedIn) ...[
                     _HeroCard(
-                      title: 'Mulai Diskusi Baru',
-                      subtitle: 'Bagikan opini, analisis taktik, atau tanya komunitas.',
-                      ctaLabel: 'Tulis Diskusi',
+                      title: 'Start a New Discussion',
+                      subtitle: 'Share opinions, tactical analyses, or ask the community.',
+                      ctaLabel: 'Start Discussion',
                       onTap: _openCreate,
                     ),
                     const SizedBox(height: 16),
@@ -332,7 +332,7 @@ class _EmptySearchState extends StatelessWidget {
           Icon(Icons.search_off, color: Colors.white.withOpacity(0.6)),
           const SizedBox(height: 8),
           Text(
-            'Tidak ada hasil untuk "$query"',
+            'No results for "$query"',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white),
           ),
@@ -340,7 +340,7 @@ class _EmptySearchState extends StatelessWidget {
           TextButton(
             onPressed: onClear,
             child: const Text(
-              'Hapus pencarian',
+              'Clear search',
               style: TextStyle(color: ArenaColor.dragonFruit),
             ),
           ),
@@ -410,7 +410,7 @@ class _ThreadCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'oleh ${thread.authorDisplay} · ${thread.relativeTime}',
+                        'by ${thread.authorDisplay} · ${thread.relativeTime}',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.75),
                           fontSize: 12,
@@ -503,7 +503,7 @@ class _ThreadCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Terkait: ${thread.newsTitle}',
+                      'Related: ${thread.newsTitle}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -552,7 +552,7 @@ class _ErrorCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Gagal memuat',
+            'Failed to load',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 15,
@@ -566,7 +566,7 @@ class _ErrorCard extends StatelessWidget {
             onPressed: onRetry,
             icon: const Icon(Icons.refresh, color: Colors.white),
             label: const Text(
-              'Coba lagi',
+              'Try again',
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -597,7 +597,7 @@ class _EmptyState extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Belum ada diskusi',
+                  'No discussions yet',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -605,7 +605,7 @@ class _EmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Mulai topik pertama dan ajak komunitas berdiskusi.',
+                  'Start the first topic and invite the community to chat.',
                   style: TextStyle(color: Colors.white.withOpacity(0.8)),
                 ),
               ],

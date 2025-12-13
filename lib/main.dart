@@ -305,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Center(
-                            child: Text("Belum ada berita trending lainnya.", style: TextStyle(color: Colors.white38)),
+                            child: Text("No other trending news yet.", style: TextStyle(color: Colors.white38)),
                           ),
                         )
                       ],

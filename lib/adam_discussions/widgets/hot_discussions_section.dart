@@ -72,7 +72,7 @@ class _HotDiscussionsSectionState extends State<HotDiscussionsSection> {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Text(
-          'Belum ada diskusi',
+          'No discussions yet',
           style: TextStyle(color: Colors.white.withOpacity(0.6)),
         ),
       );

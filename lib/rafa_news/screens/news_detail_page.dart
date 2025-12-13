@@ -66,16 +66,16 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: ArenaColor.darkAmethystLight,
-        title: const Text("Hapus Berita?", style: TextStyle(color: Colors.white)),
-        content: const Text("Aksi ini tidak dapat dibatalkan.", style: TextStyle(color: Colors.white70)),
+        title: const Text("Delete News?", style: TextStyle(color: Colors.white)),
+        content: const Text("This action cannot be undone.", style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false), 
-            child: const Text("Batal", style: TextStyle(color: Colors.grey))
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey))
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true), 
-            child: const Text("Hapus", style: TextStyle(color: Colors.redAccent))
+            child: const Text("Delete", style: TextStyle(color: Colors.redAccent))
           ),
         ],
       ),
@@ -92,12 +92,12 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       if (mounted) {
         if (response['ok'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Berita berhasil dihapus", style: TextStyle(color: Colors.black)), backgroundColor: Colors.green)
+            const SnackBar(content: Text("News deleted successfully", style: TextStyle(color: Colors.black)), backgroundColor: Colors.green)
           );
           Navigator.pop(context, true); 
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response['error'] ?? "Gagal menghapus"), backgroundColor: Colors.red)
+            SnackBar(content: Text(response['error'] ?? "Failed to delete"), backgroundColor: Colors.red)
           );
         }
       }

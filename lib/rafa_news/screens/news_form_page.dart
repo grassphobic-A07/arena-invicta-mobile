@@ -93,14 +93,14 @@ class _NewsFormPageState extends State<NewsFormPage> {
           if (response['ok'] == true || response['id'] != null || response['status'] == true) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(widget.newsToEdit != null ? "Berita berhasil diupdate!" : "Berita berhasil dibuat!"), 
+                content: Text(widget.newsToEdit != null ? "News updated successfully!" : "News created successfully!"), 
                 backgroundColor: Colors.green
               ),
             );
             Navigator.pop(context, true); 
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response['error'] ?? response['message'] ?? "Gagal menyimpan berita"), backgroundColor: Colors.red),
+              SnackBar(content: Text(response['error'] ?? response['message'] ?? "Failed to save news"), backgroundColor: Colors.red),
             );
           }
         }
@@ -180,9 +180,9 @@ class _NewsFormPageState extends State<NewsFormPage> {
                     TextFormField(
                       initialValue: _title,
                       style: GoogleFonts.poppins(color: Colors.white),
-                      decoration: _inputDecoration("Title", "Judul Berita"),
+                      decoration: _inputDecoration("Title", "News Title"),
                       onSaved: (value) => _title = value!,
-                      validator: (value) => value!.isEmpty ? "Judul tidak boleh kosong" : null,
+                      validator: (value) => value!.isEmpty ? "Title cannot be empty" : null,
                     ),
                     const SizedBox(height: 20),
 
@@ -201,7 +201,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       dropdownColor: ArenaColor.darkAmethyst,
                       style: GoogleFonts.poppins(color: Colors.white),
                       decoration: _inputDecoration("Sport", ""),
-                      hint: Text("Pilih Cabang Olahraga", style: GoogleFonts.poppins(color: Colors.white70)),
+                      hint: Text("Select sport", style: GoogleFonts.poppins(color: Colors.white70)),
                       items: _sportsOptions.map((item) {
                         return DropdownMenuItem(
                           value: item['value'],
@@ -209,7 +209,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
                         );
                       }).toList(),
                       onChanged: (val) => setState(() => _selectedSport = val),
-                      validator: (value) => value == null ? "Pilih salah satu" : null,
+                      validator: (value) => value == null ? "Please choose one" : null,
                     ),
                     const SizedBox(height: 20),
 
@@ -219,7 +219,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       dropdownColor: ArenaColor.darkAmethyst,
                       style: GoogleFonts.poppins(color: Colors.white),
                       decoration: _inputDecoration("Category", ""),
-                      hint: Text("Pilih Kategori Berita", style: GoogleFonts.poppins(color: Colors.white70)),
+                      hint: Text("Select news category", style: GoogleFonts.poppins(color: Colors.white70)),
                       items: _categoryOptions.map((item) {
                         return DropdownMenuItem(
                           value: item['value'],
@@ -227,7 +227,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
                         );
                       }).toList(),
                       onChanged: (val) => setState(() => _selectedCategory = val),
-                      validator: (value) => value == null ? "Pilih salah satu" : null,
+                      validator: (value) => value == null ? "Please choose one" : null,
                     ),
                     const SizedBox(height: 20),
 
@@ -236,9 +236,9 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       initialValue: _content,
                       style: GoogleFonts.poppins(color: Colors.white),
                       maxLines: 10,
-                      decoration: _inputDecoration("Content", "Isi berita..."),
+                      decoration: _inputDecoration("Content", "News content..."),
                       onSaved: (value) => _content = value!,
-                      validator: (value) => value!.isEmpty ? "Konten tidak boleh kosong" : null,
+                      validator: (value) => value!.isEmpty ? "Content cannot be empty" : null,
                     ),
                     const SizedBox(height: 20),
 
@@ -252,7 +252,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       ),
                       child: SwitchListTile(
                         title: Text("Featured News?", style: GoogleFonts.poppins(color: Colors.white)),
-                        subtitle: Text("Tampilkan di Carousel Home", style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12)),
+                        subtitle: Text("Show in Home Carousel", style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12)),
                         value: _isFeatured,
                         activeColor: ArenaColor.dragonFruit,
                         onChanged: (val) => setState(() => _isFeatured = val),

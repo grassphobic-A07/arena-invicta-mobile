@@ -26,6 +26,7 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
   String? _error;
   bool _userHasUpvoted = false;
   int _upvoteCount = 0;
+  int _viewsCount = 0;
   String? _currentUsername;
   final _commentController = TextEditingController();
   bool _isSubmittingComment = false;
@@ -34,6 +35,7 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
   void initState() {
     super.initState();
     _upvoteCount = widget.thread.upvoteCount;
+    _viewsCount = widget.thread.viewsCount + 1; // bump view locally on open
     _fetchDetail();
   }
 
@@ -57,6 +59,7 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
         _userHasUpvoted = response['thread']?['user_has_upvoted'] ?? false;
         _upvoteCount =
             response['thread']?['upvote_count'] ?? widget.thread.upvoteCount;
+        _viewsCount = response['thread']?['views_count'] ?? _viewsCount;
         _currentUsername = response['current_username'] as String?;
         _isLoading = false;
         _error = null;
@@ -728,7 +731,7 @@ class _DiscussionDetailPageState extends State<DiscussionDetailPage> {
               ),
               const SizedBox(width: 6),
               Text(
-                '${thread.viewsCount}',
+                '$_viewsCount',
                 style: const TextStyle(color: Colors.white70),
               ),
             ],

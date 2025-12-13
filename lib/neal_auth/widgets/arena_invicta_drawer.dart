@@ -112,17 +112,18 @@ class ArenaInvictaDrawer extends StatelessWidget {
             },
           ),
 
-          ListTile(
-            leading: const Icon(Icons.sports_esports_rounded, color: Colors.white,),
-            title: const Text('Quiz', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QuizMainPage()),
-              );
-            },
-          ),
+          if (userProvider.isLoggedIn)
+            ListTile(
+              leading: const Icon(Icons.sports_esports_rounded, color: Colors.white,),
+              title: const Text('Quiz', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const QuizMainPage()),
+                );
+              },
+            ),
 
           ListTile(
             leading: const Icon(Icons.emoji_events_rounded, color: Colors.white,),
