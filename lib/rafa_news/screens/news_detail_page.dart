@@ -65,8 +65,8 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: ArenaColor.darkAmethystLight,
-        title: const Text("Delete News?", style: TextStyle(color: Colors.white)),
+        backgroundColor: ArenaColor.darkAmethyst,
+        title: const Text("Delete News?", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: const Text("This action cannot be undone.", style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
