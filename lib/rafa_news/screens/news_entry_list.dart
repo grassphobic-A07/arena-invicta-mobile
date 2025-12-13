@@ -94,7 +94,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
       // --- TOMBOL TAMBAH BERITA ---
       floatingActionButton: (userProvider.isLoggedIn && (userProvider.role == UserRole.staff || userProvider.role == UserRole.admin))
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 110.0, right: 10.0), 
+              padding: const EdgeInsets.only(bottom: 90.0, right: 8.0), 
               child: FloatingActionButton(
                 onPressed: () async {
                   final result = await Navigator.push(
@@ -106,7 +106,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                   }
                 },
                 backgroundColor: ArenaColor.dragonFruit,
-                child: const Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white, size: 29.0,),
               ),
             )
           : null,
@@ -163,7 +163,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                                     child: Text(
                                       sport, 
                                       style: GoogleFonts.outfit(
-                                        color: isSelected ? ArenaColor.dragonFruit : Colors.white,
+                                        color: Colors.white.withOpacity(0.8),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),

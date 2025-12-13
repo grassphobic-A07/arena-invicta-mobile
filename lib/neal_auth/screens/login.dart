@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                         _buildLabel("Username"),
                         TextFormField(
                           controller: _usernameController,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: Colors.white),
                           decoration: _inputDecoration("Enter your Username"),
                           validator: (value) {
                             if (value == null || value.isEmpty) {

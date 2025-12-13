@@ -35,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _bioController = TextEditingController();
 
     // Fetch data awal
+    // Punya Neal
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchProfile();
     });

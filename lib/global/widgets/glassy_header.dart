@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
@@ -7,7 +8,7 @@ import 'package:arena_invicta_mobile/main.dart';
 
 class GlassyHeader extends StatelessWidget {
   final UserProvider userProvider;
-  final GlobalKey<ScaffoldState>? scaffoldKey; // Hanya perlu jika isHome = true
+  final GlobalKey<ScaffoldState>? scaffoldKey;
   final bool isHome;
   final String title;
   final String subtitle;
@@ -16,7 +17,7 @@ class GlassyHeader extends StatelessWidget {
     super.key,
     required this.userProvider,
     this.scaffoldKey,
-    this.isHome = true, // Defaultnya Home
+    this.isHome = true,
     this.title = "Arena Invicta",
     this.subtitle = "", 
   });
@@ -40,11 +41,12 @@ class GlassyHeader extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             color: ArenaColor.darkAmethyst.withOpacity(0.3),
+            // PADDING INI BERLAKU UNTUK SEMUA KONDISI (LOGIN / GUEST)
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 10,
-              bottom: 20,
-              left: 10, 
-              right: 20,
+              top: MediaQuery.of(context).padding.top + 10, // Tetap +10 agar aman dari status bar
+              bottom: 5, // Padding bawah standar agar tidak terlalu mepet
+              left: 8, 
+              right: 24, 
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -52,7 +54,6 @@ class GlassyHeader extends StatelessWidget {
                 // --- KIRI: ICON & JUDUL ---
                 Row(
                   children: [
-                    // Jika Home -> Burger Menu, Jika Tidak -> Back Button
                     if (isHome)
                       IconButton(
                         padding: EdgeInsets.zero,
@@ -73,9 +74,7 @@ class GlassyHeader extends StatelessWidget {
                         ),
                       ),
                     
-                    // Jika itu icon back, kasih jarak sedikit
-                    if (!isHome) const SizedBox(width: 16),
-                    // Jika itu icon burger, kasih jarak lebih sedikit
+                    if (!isHome) const SizedBox(width: 12),
                     if (isHome) const SizedBox(width: 8),
                     
                     Column(
@@ -86,7 +85,7 @@ class GlassyHeader extends StatelessWidget {
                           title,
                           style: GoogleFonts.outfit(
                             color: ArenaColor.dragonFruit,
-                            fontSize: isHome ? 14 : 10,
+                            fontSize: isHome ? 18 : 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: isHome ? 0.5 : 1.5,
                           ),
@@ -107,6 +106,7 @@ class GlassyHeader extends StatelessWidget {
 
                 // --- KANAN: LOGIN / PROFILE ---
                 if (!userProvider.isLoggedIn)
+                  // TOMBOL LOGIN (GUEST)
                   GestureDetector(
                     onTap: () => Navigator.pushNamed(context, LoginPage.routeName),
                     child: Row(
@@ -125,23 +125,78 @@ class GlassyHeader extends StatelessWidget {
                     ),
                   )
                 else
+                  // USER PROFILE (LOGGED IN)
+                  // Tidak ada padding khusus di sini, mengikuti container induk
                   Row(
-                    children: [                      
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: ArenaColor.purpleX11,
-                        backgroundImage: (userProvider.avatarUrl != null && userProvider.avatarUrl!.isNotEmpty)
-                            ? NetworkImage(userProvider.avatarUrl!)
-                            : null,
-                        child: (userProvider.avatarUrl == null || userProvider.avatarUrl!.isEmpty)
-                            ? Text(
-                                userProvider.username.isNotEmpty
-                                    ? userProvider.username[0].toUpperCase()
-                                    : "U",
-                                style: const TextStyle(
-                                    fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
-                              )
-                            : null,
+                    children: [
+                      // Teks Hi & Role (Hanya di Home)
+                      if (isHome) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "Hi, ",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  userProvider.username,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              roleText,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+
+                      // Foto Profil (Klik ke Profile)
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProfilePage(),
+                            ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: ArenaColor.purpleX11,
+                          backgroundImage: (userProvider.avatarUrl != null &&
+                                  userProvider.avatarUrl!.isNotEmpty)
+                              ? NetworkImage(userProvider.avatarUrl!)
+                              : null,
+                          child: (userProvider.avatarUrl == null ||
+                                  userProvider.avatarUrl!.isEmpty)
+                              ? Text(
+                                  userProvider.username.isNotEmpty
+                                      ? userProvider.username[0].toUpperCase()
+                                      : "U",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                )
+                              : null,
+                        ),
                       )
                     ],
                   ),

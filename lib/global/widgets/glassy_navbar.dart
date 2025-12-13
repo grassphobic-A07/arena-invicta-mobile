@@ -1,43 +1,24 @@
 import 'dart:ui';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
 import 'package:flutter/material.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/main.dart';
-import 'package:arena_invicta_mobile/adam_discussions/discussions_page.dart';
+import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
+
+// --- TAMBAHKAN IMPORT INI ---
+import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
 
 class GlassyNavbar extends StatelessWidget {
   final UserProvider userProvider;
-  final VoidCallback onFabTap; // Center button action
-  final IconData fabIcon;      // Center button icon
-  final bool isHome;           // NEW: Logic switcher
+  final VoidCallback onFabTap; // Fungsi ketika tombol tengah ditekan
+  final IconData fabIcon; // Icon tombol tengah
 
   const GlassyNavbar({
     super.key,
     required this.userProvider,
     required this.onFabTap,
     this.fabIcon = Icons.home_rounded,
-    this.isHome = false,       // Default to false (Sub-page behavior)
   });
-
-  // Helper to handle navigation logic
-  void _navigate(BuildContext context, Widget page) {
-    if (isHome) {
-      // If we are coming from Home, we PUSH (Add to stack)
-      // This ensures Home stays in the background.
-      Navigator.push(
-        context, 
-        MaterialPageRoute(builder: (context) => page)
-      );
-    } else {
-      // If we are already on a sub-page (like Quiz), we REPLACE.
-      // This ensures we don't have [Home, Quiz, Discussion, Quiz...]
-      Navigator.pushReplacement(
-        context, 
-        MaterialPageRoute(builder: (context) => page)
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +40,10 @@ class GlassyNavbar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E123B).withOpacity(0.70),
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: Colors.white.withOpacity(0.12), width: 1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.12),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.5),
@@ -79,42 +63,61 @@ class GlassyNavbar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // 1. QUIZ BUTTON
                 if (userProvider.isLoggedIn)
                   IconButton(
                     tooltip: "Quiz",
-                    onPressed: () => _navigate(context, const QuizMainPage()),
-                    icon: const Icon(Icons.sports_esports_rounded, color: Colors.white54),
+                    onPressed: () {
+                      // --- NAVIGASI KE QUIZ MAIN PAGE ---
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QuizMainPage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.sports_esports_rounded,
+                      color: Colors.white54,
+                    ),
                   )
                 else
                   const SizedBox(width: 48, height: 48),
 
-                // 2. DISCUSSIONS BUTTON
                 IconButton(
                   tooltip: "Discussions",
-                  onPressed: () => _navigate(context, const DiscussionsPage()),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DiscussionsPage(),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.forum_rounded, color: Colors.white54),
                 ),
 
-                const SizedBox(width: 60), // Spacer for Center FAB
+                const SizedBox(width: 60), // Spacer Tengah
 
-                // 3. LEAGUE BUTTON
                 IconButton(
                   tooltip: "League",
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("League Coming Soon!"))),
-                  icon: const Icon(Icons.emoji_events_rounded, color: Colors.white54),
+                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("League Coming Soon!")),
+                  ),
+                  icon: const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Colors.white54,
+                  ),
                 ),
 
-                // 4. PROFILE BUTTON
                 if (userProvider.isLoggedIn)
                   IconButton(
                     tooltip: "Profile",
-                    onPressed: () {
-                      // Profile is usually unique, typically handled via Named Routes, 
-                      // but using _navigate works for consistency.
-                      _navigate(context, const ProfilePage());
-                    },
-                    icon: const Icon(Icons.person_rounded, color: Colors.white54),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, ProfilePage.routeName),
+                    icon: const Icon(
+                      Icons.person_rounded,
+                      color: Colors.white54,
+                    ),
                   )
                 else
                   const SizedBox(width: 48, height: 48),

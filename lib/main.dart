@@ -1,14 +1,15 @@
 import 'dart:ui';
-import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 
+// --- IMPORTS MODUL ---
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/global/screens/splash_screen.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart'; 
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart'; 
+import 'package:arena_invicta_mobile/global/environments.dart'; 
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/login.dart';
@@ -18,8 +19,11 @@ import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart';
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
-import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart'; 
+import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart';
+import 'package:arena_invicta_mobile/rafa_news/widgets/news_entry_card.dart';
 import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart'; 
+
+import 'package:arena_invicta_mobile/adam_discussions/widgets/hot_discussions_section.dart';
 
 void main() {
   runApp(const MyApp());
@@ -77,13 +81,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // List Kategori
   final List<String> categories = ["All", "Football", "Basketball", "Tennis", "Volleyball", "Motogp"];
 
-  // --- LOGIKA FETCH & PISAHKAN DATA ---
   Future<Map<String, List<NewsEntry>>> fetchHomeNews(CookieRequest request) async {
-    // URL tanpa filter, karena Home menampilkan highlight global
-    String url = '$baseUrl/show-news-json';
+    String url = '$baseUrl/show-news-json'; 
     
     try {
       final response = await request.get(url);
@@ -143,52 +144,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDiscussionCard({required String title, required String topic, required String count, required String imageUrl}) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ArenaColor.darkAmethystLight.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              width: 60, height: 60, fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(width: 60, height: 60, color: Colors.grey.withOpacity(0.2)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(topic, style: TextStyle(color: Colors.white54, fontSize: 12)),
-              ],
-            ),
-          ),
-          Column(
-            children: [
-              const Icon(Icons.keyboard_arrow_up_rounded, color: ArenaColor.dragonFruit),
-              Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
     final request = context.watch<CookieRequest>();
     
+    // --- CEK PERMISSION ---
+    bool canCreate = userProvider.isLoggedIn && 
+        (userProvider.role == UserRole.staff || userProvider.role == UserRole.admin);
+
     return Scaffold(
       key: _scaffoldKey, 
       backgroundColor: ArenaColor.darkAmethyst,
@@ -204,7 +168,7 @@ class _HomePageState extends State<HomePage> {
           // 2. MAIN CONTENT
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70, bottom: 120),  
+              padding: const EdgeInsets.only(top: 110, bottom: 120), 
               child: FutureBuilder<Map<String, List<NewsEntry>>>(
                 future: fetchHomeNews(request),
                 builder: (context, snapshot) {
@@ -225,12 +189,12 @@ class _HomePageState extends State<HomePage> {
                       
                       // --- A. CAROUSEL SECTION ---
                       SizedBox(
-                        height: 250, 
+                        height: 200, 
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
                              Positioned(
-                               top: -20,
+                               top: -30,
                                left: 0, 
                                right: 0,
                                height: 250,
@@ -254,7 +218,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 40),
 
                       // --- B. SPORTS CHIPS ---
                       SizedBox(
@@ -271,7 +235,6 @@ class _HomePageState extends State<HomePage> {
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 12), 
                                     child: GestureDetector(
-                                      // LOGIKA NAVIGASI:
                                       onTap: () {
                                         Navigator.push(
                                           context,
@@ -308,9 +271,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 0),
 
-                      // --- C. LIST SECTION (TRENDING NEWS) ---
+                      // --- C. LIST SECTION (TRENDING) ---
                       _buildSectionTitle("Trending News"),
 
                       if (trendingData.isNotEmpty) ...[
@@ -320,12 +283,15 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                  child: NewsEntryCard(
+                                  
+                                  // --- CHANGE IS HERE: BACK TO NewsEntryCard ---
+                                  child: NewsEntryCard( 
                                     news: news,
                                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))),
                                   ),
+                                  // -------------------------------------------
                                 ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 24), // Jarak antar card lebih besar biar lega
                               ],
                             );
                           }).toList(),
@@ -348,12 +314,8 @@ class _HomePageState extends State<HomePage> {
                       // --- D. DISCUSSIONS SECTION ---
                       const SizedBox(height: 16),
                       _buildSectionTitle("Hot Discussions"),
-                      _buildDiscussionCard(
-                        title: "Champions League Final",
-                        topic: "Discuss the thrilling final match!",
-                        count: "256",
-                        imageUrl: "https://example.com/images/champions_league.jpg",
-                      ),
+
+                      const HotDiscussionsSection(),
                       
                       const SizedBox(height: 80),
                     ],
@@ -363,9 +325,33 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // 3. HEADER & NAVBAR
+          // 3. HEADER
           GlassyHeader(userProvider: userProvider, scaffoldKey: _scaffoldKey, isHome: true, title: "Arena Invicta"),
-          GlassyNavbar(userProvider: userProvider, isHome: true, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
+          
+          // 4. NAVBAR
+          GlassyNavbar(userProvider: userProvider, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
+
+          // 5. TOMBOL ADD NEWS
+          if (canCreate)
+            Positioned(
+              bottom: 130, 
+              right: 24, 
+              child: FloatingActionButton(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NewsFormPage()),
+                  );
+                  if (result == true) {
+                    setState(() {});
+                  }
+                },
+                backgroundColor: ArenaColor.dragonFruit,
+                elevation: 10,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
+                child: const Icon(Icons.add, color: Colors.white, size: 28),
+              ),
+            ),
         ],
       ),
     );

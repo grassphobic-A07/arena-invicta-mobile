@@ -192,7 +192,6 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       style: GoogleFonts.poppins(color: Colors.white),
                       decoration: _inputDecoration("Thumbnail URL", "https://example.com/image.jpg"),
                       onSaved: (value) => _thumbnail = value!,
-                      validator: (value) => value!.isEmpty ? "URL Gambar tidak boleh kosong" : null,
                     ),
                     const SizedBox(height: 20),
 
