@@ -10,11 +10,13 @@ import 'package:provider/provider.dart';
 class PublicQuizList extends StatefulWidget {
   final String searchQuery;
   final String category;
+  final EdgeInsets? contentPadding; // --- TAMBAHAN PARAMETER ---
 
   const PublicQuizList({
     super.key, 
     required this.searchQuery, 
-    required this.category
+    required this.category,
+    this.contentPadding, // --- TAMBAHAN ---
   });
 
   @override
@@ -75,7 +77,8 @@ class _PublicQuizListState extends State<PublicQuizList> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          // --- GUNAKAN PADDING DARI PARAMETER ---
+          padding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
             final quiz = snapshot.data![index];

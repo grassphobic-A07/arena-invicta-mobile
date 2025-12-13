@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:ui'; // PENTING: Untuk ImageFilter
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -11,7 +11,7 @@ import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
 
 import 'package:arena_invicta_mobile/neal_auth/widgets/arena_invicta_drawer.dart'; 
-import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart'; // Import Form
+import 'package:arena_invicta_mobile/rafa_news/screens/news_form_page.dart'; 
 
 import 'package:arena_invicta_mobile/rafa_news/models/news_entry.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_detail_page.dart';
@@ -34,15 +34,33 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
   String _selectedSport = "All";
   final List<String> _sportsFilters = ["All", "Football", "Basketball", "Tennis", "Volleyball", "Motogp"];
 
+  // --- STATE VARIABLES ---
+  List<NewsEntry> _newsList = [];
+  bool _isLoading = true; 
+  bool _isError = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.initialCategory != null) {
       _selectedSport = widget.initialCategory!;
     }
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
-  Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
+  Future<void> _loadData({bool showLoading = true}) async {
+    final request = context.read<CookieRequest>();
+    
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+        _isError = false;
+      });
+    }
+
     String url = '$baseUrl/show-news-json'; 
     if (_selectedSport != "All") {
       url += '?filter=${_selectedSport.toLowerCase()}';
@@ -50,14 +68,25 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
 
     try {
       final response = await request.get(url);
-      List<NewsEntry> listNews = [];
+      List<NewsEntry> tempList = [];
       for (var d in response) {
-        if (d != null) listNews.add(NewsEntry.fromJson(d));
+        if (d != null) tempList.add(NewsEntry.fromJson(d));
       }
-      return listNews;
+
+      if (mounted) {
+        setState(() {
+          _newsList = tempList;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint("Error fetching news: $e");
-      return [];
+      if (mounted) {
+        setState(() {
+          _isError = true;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -71,16 +100,20 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final request = context.watch<CookieRequest>();
     final userProvider = context.watch<UserProvider>();
 
-    // Logic Role Text
     String roleText = "Guest";
     if (userProvider.isLoggedIn) {
       if (userProvider.role == UserRole.admin) roleText = "Admin";
       else if (userProvider.role == UserRole.staff) roleText = "Writer";
       else roleText = "Member";
     }
+
+    // Hitung posisi Sticky Header (Header + Chips)
+    // Header ~70-80px (tergantung status bar)
+    final double headerTop = MediaQuery.of(context).padding.top + 70; 
+    // Tinggi area Chips ~50px
+    final double listTopPadding = headerTop + 50;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -91,10 +124,9 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
       backgroundColor: ArenaColor.darkAmethyst,
       resizeToAvoidBottomInset: false, 
       
-      // --- TOMBOL TAMBAH BERITA ---
       floatingActionButton: (userProvider.isLoggedIn && (userProvider.role == UserRole.staff || userProvider.role == UserRole.admin))
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 90.0, right: 8.0), 
+              padding: const EdgeInsets.only(bottom: 110.0, right: 10.0), 
               child: FloatingActionButton(
                 onPressed: () async {
                   final result = await Navigator.push(
@@ -102,11 +134,11 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                     MaterialPageRoute(builder: (context) => const NewsFormPage()),
                   );
                   if (result == true) {
-                    setState(() {});
+                    _loadData(showLoading: false);
                   }
                 },
                 backgroundColor: ArenaColor.dragonFruit,
-                child: const Icon(Icons.add, color: Colors.white, size: 29.0,),
+                child: const Icon(Icons.add, color: Colors.white),
               ),
             )
           : null,
@@ -117,133 +149,135 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
           Positioned(top: -50, right: -50, child: _buildGlowCircle(ArenaColor.purpleX11)),
           Positioned(bottom: 100, left: -50, child: _buildGlowCircle(ArenaColor.dragonFruit)),
 
-          // 2. MAIN CONTENT
+          // 2. MAIN CONTENT (LIST BERITA)
+          // Berada di layer paling bawah agar scroll di belakang header
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 110, bottom: 120), 
+              // Padding atas disesuaikan agar item pertama muncul pas di bawah chips
+              padding: EdgeInsets.only(top: listTopPadding + 10, bottom: 120), 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
-                  // A. FILTER KATEGORI (CHIPS)
-                  SizedBox(
-                    height: 45,
-                    child: Center(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        clipBehavior: Clip.none, 
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 100),
+                      child: Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit)),
+                    )
+                  else if (_isError || _newsList.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 100),
+                      child: Center(
+                        child: Column(
                           children: [
-                            const SizedBox(width: 25), 
-                            
-                            ..._sportsFilters.map((sport) {
-                              final isSelected = _selectedSport.toLowerCase() == sport.toLowerCase();
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 12), 
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _selectedSport = sport),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: isSelected 
-                                          ? ArenaColor.dragonFruit.withOpacity(0.1) 
-                                          : ArenaColor.darkAmethystLight.withOpacity(0.3),
-                                      borderRadius: BorderRadius.circular(100),
-                                      border: Border.all(
-                                        color: isSelected ? ArenaColor.dragonFruit : Colors.white.withOpacity(0.1),
-                                        width: isSelected ? 2 : 1,
-                                      ),
-                                      boxShadow: isSelected 
-                                          ? [BoxShadow(color: ArenaColor.dragonFruit.withOpacity(0.6), blurRadius: 15, spreadRadius: 1)] 
-                                          : [],
-                                    ),
-                                    child: Text(
-                                      sport, 
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.white.withOpacity(0.8),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                            Icon(Icons.search_off, size: 50, color: Colors.white24),
+                            SizedBox(height: 10),
+                            Text("Tidak ada berita di kategori ini.", style: TextStyle(color: Colors.white38)),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // B. LIST BERITA
-                  FutureBuilder<List<NewsEntry>>(
-                    future: fetchNews(request),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Padding(
-                          padding: EdgeInsets.only(top: 100),
-                          child: Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit)),
-                        );
-                      } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.only(top: 100),
-                          child: Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.search_off, size: 50, color: Colors.white24),
-                                SizedBox(height: 10),
-                                Text("Tidak ada berita di kategori ini.", style: TextStyle(color: Colors.white38)),
-                              ],
-                            ),
-                          ),
-                        );
-                      } else {
-                        return ListView.builder(
-                          shrinkWrap: true, 
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (context, index) {
-                            final news = snapshot.data![index];
-                            return NewsEntryTile( 
-                              news: news,
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context, 
-                                  MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))
-                                );
-                                // Refresh jika kembali setelah edit/delete
-                                if (result == true) setState(() {});
-                              },
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true, 
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      itemCount: _newsList.length,
+                      itemBuilder: (context, index) {
+                        final news = _newsList[index];
+                        return NewsEntryTile( 
+                          news: news,
+                          onTap: () async {
+                            await Navigator.push(
+                              context, 
+                              MaterialPageRoute(builder: (context) => NewsDetailPage(news: news))
                             );
+                            // Silent refresh saat kembali
+                            _loadData(showLoading: false);
                           },
                         );
-                      }
-                    },
-                  ),
+                      },
+                    ),
                 ],
               ),
             ),
           ),
 
-          // 3. HEADER
+          // 3. HEADER (TITLE)
           GlassyHeader(
             userProvider: userProvider,
             scaffoldKey: _scaffoldKey, 
             isHome: false, 
             title: "ARENA INVICTA",
-            subtitle: "Latest News 📰",
+            subtitle: "Latest News",
           ),
 
-          // 4. NAVBAR
+          // 4. STICKY CATEGORY CHIPS (GLASSY STYLE)
+          // Posisinya Fixed, Container Transparan, Buttonnya Glassy
+          Positioned(
+            top: headerTop, 
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                itemCount: _sportsFilters.length,
+                itemBuilder: (context, index) {
+                  final sport = _sportsFilters[index];
+                  final isSelected = _selectedSport.toLowerCase() == sport.toLowerCase();
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12), 
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _selectedSport = sport);
+                        _loadData(showLoading: true);
+                      },
+                      // --- EFEK GLASSY UNTUK SETIAP BUTTON ---
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Blur
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              // Warna semi-transparan
+                              color: isSelected 
+                                  ? ArenaColor.dragonFruit.withOpacity(0.8) 
+                                  : Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected 
+                                    ? ArenaColor.dragonFruit 
+                                    : Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                            child: Text(
+                              sport, 
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // 5. NAVBAR
           GlassyNavbar(
             userProvider: userProvider,
             fabIcon: Icons.grid_view_rounded, 
+            activeItem: NavbarItem.news,
             onFabTap: () {
               Navigator.pop(context); 
             },

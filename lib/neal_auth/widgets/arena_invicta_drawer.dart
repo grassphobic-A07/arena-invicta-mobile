@@ -9,6 +9,8 @@ import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 // IMPORT HALAMAN NEWS LIST DI SINI
 import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart'; 
+import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
+import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -94,6 +96,41 @@ class ArenaInvictaDrawer extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const NewsEntryListPage()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.forum_rounded, color: Colors.white,),
+            title: const Text('Discussions', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DiscussionsPage()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.sports_esports_rounded, color: Colors.white,),
+            title: const Text('Quiz', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuizMainPage()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.emoji_events_rounded, color: Colors.white,),
+            title: const Text('League (Coming Soon)', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("League Coming Soon!")),
               );
             },
           ),

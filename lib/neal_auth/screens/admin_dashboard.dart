@@ -149,7 +149,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
 
       body: _isLoading 
-      ? const Center(child: CircularProgressIndicator(color: ArenaColor.purpleX11,)) 
+      ? const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit,)) 
       : RefreshIndicator(
         onRefresh: fetchAdminData,
         child: ListView(

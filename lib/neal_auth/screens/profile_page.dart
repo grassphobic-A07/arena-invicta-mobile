@@ -266,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: ArenaColor.purpleX11),
+              child: CircularProgressIndicator(color: ArenaColor.dragonFruit),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(

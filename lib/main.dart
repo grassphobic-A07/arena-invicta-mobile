@@ -257,7 +257,6 @@ class _HomePageState extends State<HomePage> {
                                           cat,
                                           style: GoogleFonts.outfit(
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold,
                                             fontSize: 14,
                                           ),
                                         ),

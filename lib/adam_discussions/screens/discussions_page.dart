@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart';
 import 'package:arena_invicta_mobile/global/widgets/glassy_navbar.dart';
 import 'package:arena_invicta_mobile/global/environments.dart';
 
@@ -25,6 +27,22 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
   List<DiscussionThread> _threads = [];
   bool _isLoading = true;
   String? _error;
+  String _searchQuery = '';
+
+  Widget _buildGlowCircle(Color color) {
+    return Container(
+      width: 320,
+      height: 320,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.22),
+        shape: BoxShape.circle,
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),
+        child: const SizedBox.shrink(),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -42,7 +60,7 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
             bottom: 120,
             left: 16,
             right: 16,
-          ), // Naikkan margin agar tidak ketutup navbar
+          ), 
           content: const Text('Silakan login untuk membuat diskusi.'),
           action: SnackBarAction(
             label: 'Login',
@@ -66,7 +84,6 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
   Future<void> _fetchThreads() async {
     final request = context.read<CookieRequest>();
     try {
-      // Gunakan baseUrl agar konsisten
       final response = await request.get("$baseUrl/discussions/api/threads/");
       final rawThreads = (response['threads'] as List<dynamic>? ?? []);
       setState(() {
@@ -89,135 +106,129 @@ class _DiscussionsPageState extends State<DiscussionsPage> {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
+    final query = _searchQuery.trim().toLowerCase();
+    final filteredThreads = _threads.where((t) {
+      if (query.isEmpty) return true;
+      final titleMatch = t.title.toLowerCase().contains(query);
+      final authorMatch = t.authorDisplay.toLowerCase().contains(query);
+      final tagsMatch = t.tags.any((tag) => tag.toLowerCase().contains(query));
+      return titleMatch || authorMatch || tagsMatch;
+    }).toList();
+
+    // Hitung posisi top agar pas di bawah header
+    final double headerHeight = MediaQuery.of(context).padding.top + 80;
+    final double searchBarHeight = 60;
+    final double contentPaddingTop = headerHeight + searchBarHeight + 10;
 
     return Scaffold(
-      // Background Gradient (Langsung di Scaffold body atau Stack paling bawah)
       backgroundColor: ArenaColor.darkAmethyst,
+      resizeToAvoidBottomInset: false, 
       body: Stack(
         children: [
-          // 1. BACKGROUND GRADIENT (Sesuai style diskusi sebelumnya)
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topLeft,
-                  radius: 1.2,
-                  colors: [Color(0xFF9333EA), Color(0xFF2A1B54)],
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.bottomRight,
-                  radius: 1.2,
-                  colors: [Color(0xFF4A49A0), Color(0xFF2A1B54)],
-                ),
-              ),
-            ),
-          ),
+          // 0. GLOWS (background)
+          Positioned(top: -140, right: -80, child: _buildGlowCircle(ArenaColor.dragonFruit)),
+          Positioned(bottom: -180, left: -120, child: _buildGlowCircle(ArenaColor.purpleX11)),
 
-          // 2. MAIN CONTENT (SCROLLABLE)
+          // 1. MAIN CONTENT (LIST VIEW)
+          // List ini ada di layer paling bawah, jadi dia akan scroll di "belakang" Search Bar
           Positioned.fill(
-            child: Column(
-              children: [
-                // AppBar Manual (Agar transparan)
-                AppBar(
-                  title: const Text(
-                    'Discussions',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
+            child: RefreshIndicator(
+              onRefresh: _fetchThreads,
+              child: ListView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                padding: EdgeInsets.fromLTRB(16, contentPaddingTop, 16, 120),
+                children: [
+                  if (userProvider.isLoggedIn) ...[
+                    _HeroCard(
+                      title: 'Mulai Diskusi Baru',
+                      subtitle: 'Bagikan opini, analisis taktik, atau tanya komunitas.',
+                      ctaLabel: 'Tulis Diskusi',
+                      onTap: _openCreate,
                     ),
-                    onPressed: () =>
-                        Navigator.pop(context), // Kembali ke halaman sebelumnya
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.search, color: Colors.white),
-                      onPressed: () {},
-                    ),
-                    if (!userProvider.isLoggedIn)
-                      TextButton.icon(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, LoginPage.routeName),
-                        icon: const Icon(Icons.login, color: Colors.white),
-                        label: const Text(
-                          'Login',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
+                    const SizedBox(height: 16),
                   ],
-                ),
 
-                // List Content
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: _fetchThreads,
-                    child: ListView(
-                      physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics(),
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 80),
+                      child: Center(
+                        child: CircularProgressIndicator(color: ArenaColor.dragonFruit),
                       ),
-                      // Padding bawah besar agar tidak tertutup Glassy Navbar
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                      children: [
-                        _HeroCard(
-                          title: 'Mulai Diskusi Baru',
-                          subtitle:
-                              'Bagikan opini, analisis taktik, atau tanya komunitas.',
-                          ctaLabel: 'Tulis Diskusi',
-                          onTap: _openCreate,
-                        ),
-                        const SizedBox(height: 16),
-
-                        if (_isLoading)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 80),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: ArenaColor.purpleX11,
-                              ),
-                            ),
-                          )
-                        else if (_error != null)
-                          _ErrorCard(message: _error!, onRetry: _fetchThreads)
-                        else if (_threads.isEmpty)
-                          const _EmptyState()
-                        else
-                          ..._threads.map(
-                            (t) => _ThreadCard(
-                              thread: t,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      DiscussionDetailPage(thread: t),
-                                ),
-                              ),
-                            ),
+                    )
+                  else if (_error != null)
+                    _ErrorCard(message: _error!, onRetry: _fetchThreads)
+                  else if (_threads.isEmpty)
+                    const _EmptyState()
+                  else if (filteredThreads.isEmpty)
+                    _EmptySearchState(
+                      query: _searchQuery,
+                      onClear: () => setState(() => _searchQuery = ''),
+                    )
+                  else
+                    ...filteredThreads.map(
+                      (t) => _ThreadCard(
+                        thread: t,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DiscussionDetailPage(thread: t),
                           ),
-                      ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
-          // 3. GLASSY NAVBAR (GLOBAL)
+          // 2. HEADER
+          GlassyHeader(
+            userProvider: userProvider,
+            isHome: false,
+            title: 'Arena Invicta',
+            subtitle: 'Discussions',
+          ),
+
+          // 3. SEARCH BAR (FIXED & GLASSY)
+          // Posisinya fixed di bawah header, content akan lewat di belakangnya
+          Positioned(
+            top: headerHeight - 5, // Sedikit overlap biar rapi
+            left: 24,
+            right: 24,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Efek blur (invisible container)
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1), // Transparan
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  ),
+                  child: TextField(
+                    style: const TextStyle(color: Colors.white),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    decoration: InputDecoration(
+                      hintText: "Find a discussion...",
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                      prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 4. NAVBAR
           GlassyNavbar(
             userProvider: userProvider,
-            // Ikon tengah di Discussions bisa digunakan untuk Refresh atau Kembali ke Home
             fabIcon: Icons.grid_view_rounded,
+            activeItem: NavbarItem.discussions,
             onFabTap: () {
-              // Jika user ingin kembali ke Home dari halaman diskusi
               Navigator.pop(context);
             },
           ),
@@ -294,6 +305,44 @@ class _HeroCard extends StatelessWidget {
             ),
             onPressed: onTap,
             child: Text(ctaLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptySearchState extends StatelessWidget {
+  const _EmptySearchState({required this.query, required this.onClear});
+
+  final String query;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.search_off, color: Colors.white.withOpacity(0.6)),
+          const SizedBox(height: 8),
+          Text(
+            'Tidak ada hasil untuk "$query"',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          TextButton(
+            onPressed: onClear,
+            child: const Text(
+              'Hapus pencarian',
+              style: TextStyle(color: ArenaColor.dragonFruit),
+            ),
           ),
         ],
       ),

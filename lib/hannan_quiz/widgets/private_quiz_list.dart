@@ -10,15 +10,17 @@ import 'package:provider/provider.dart';
 class PrivateQuizList extends StatefulWidget {
   final String searchQuery;
   final String category;
+  final EdgeInsets? contentPadding; // --- TAMBAHAN PARAMETER ---
 
   const PrivateQuizList({
     super.key, 
     required this.searchQuery, 
-    required this.category
+    required this.category,
+    this.contentPadding, // --- TAMBAHAN ---
   });
 
   @override
-  PrivateQuizListState createState() => PrivateQuizListState(); // Remove underscore from State class name
+  PrivateQuizListState createState() => PrivateQuizListState(); 
 }
 
 // Make State class public so GlobalKey can see it
@@ -70,6 +72,8 @@ class PrivateQuizListState extends State<PrivateQuizList> {
       onRefresh: handleRefresh,
       color: ArenaColor.dragonFruit,
       backgroundColor: ArenaColor.darkAmethyst,
+      // --- GESER POSISI REFRESH AGAR TIDAK KETUTUP HEADER ---
+      edgeOffset: (widget.contentPadding?.top ?? 0) + 20, 
       child: FutureBuilder(
         key: ValueKey("${widget.searchQuery}-${widget.category}-$_pullRefreshId"),
         future: fetchPrivateQuizzes(request),
@@ -86,7 +90,8 @@ class PrivateQuizListState extends State<PrivateQuizList> {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            // --- GUNAKAN PADDING DARI PARAMETER ---
+            padding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             physics: const AlwaysScrollableScrollPhysics(), 
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {

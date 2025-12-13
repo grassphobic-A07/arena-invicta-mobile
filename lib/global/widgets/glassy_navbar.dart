@@ -5,12 +5,17 @@ import 'package:arena_invicta_mobile/neal_auth/screens/profile_page.dart';
 import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
 import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
+// --- TAMBAHKAN IMPORT INI ---
+import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart';
+
+enum NavbarItem { news, quiz, discussions, league, profile }
 
 class GlassyNavbar extends StatelessWidget {
   final UserProvider userProvider;
   final VoidCallback onFabTap; 
   final IconData fabIcon; 
-  final bool isHome; // NEW: Determines navigation behavior
+  final bool isHome;
+  final NavbarItem? activeItem;
 
   const GlassyNavbar({
     super.key,
@@ -18,6 +23,7 @@ class GlassyNavbar extends StatelessWidget {
     required this.onFabTap,
     this.fabIcon = Icons.home_rounded,
     this.isHome = false, // Default is false (Feature page)
+    this.activeItem,
   });
 
   // Helper to choose Push vs PushReplacement
@@ -33,6 +39,10 @@ class GlassyNavbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color _navColor(NavbarItem item) {
+      return activeItem == item ? Colors.white : Colors.white54;
+    }
+
     return Positioned(
       bottom: 30,
       left: 24,
@@ -78,7 +88,10 @@ class GlassyNavbar extends StatelessWidget {
                   IconButton(
                     tooltip: "Quiz",
                     onPressed: () => _navigate(context, const QuizMainPage()),
-                    icon: const Icon(Icons.sports_esports_rounded, color: Colors.white54),
+                    icon: Icon(
+                      Icons.sports_esports_rounded,
+                      color: _navColor(NavbarItem.quiz),
+                    ),
                   )
                 else
                   const SizedBox(width: 48, height: 48),
@@ -86,7 +99,10 @@ class GlassyNavbar extends StatelessWidget {
                 IconButton(
                   tooltip: "Discussions",
                   onPressed: () => _navigate(context, const DiscussionsPage()),
-                  icon: const Icon(Icons.forum_rounded, color: Colors.white54),
+                  icon: Icon(
+                    Icons.forum_rounded,
+                    color: _navColor(NavbarItem.discussions),
+                  ),
                 ),
 
                 const SizedBox(width: 60), // Spacer Tengah
@@ -96,18 +112,22 @@ class GlassyNavbar extends StatelessWidget {
                   onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("League Coming Soon!")),
                   ),
-                  icon: const Icon(Icons.emoji_events_rounded, color: Colors.white54),
+                  icon: Icon(
+                    Icons.emoji_events_rounded,
+                    color: _navColor(NavbarItem.league),
+                  ),
                 ),
 
                 if (userProvider.isLoggedIn)
                   IconButton(
                     tooltip: "Profile",
                     onPressed: () {
-                      // Profile often treated as a modal or separate stack, 
-                      // but keeping it consistent here:
                       _navigate(context, const ProfilePage());
                     },
-                    icon: const Icon(Icons.person_rounded, color: Colors.white54),
+                    icon: Icon(
+                      Icons.person_rounded,
+                      color: _navColor(NavbarItem.profile),
+                    ),
                   )
                 else
                   const SizedBox(width: 48, height: 48),
@@ -119,7 +139,10 @@ class GlassyNavbar extends StatelessWidget {
           Positioned(
             top: -15,
             child: GestureDetector(
-              onTap: onFabTap,
+              onTap: () {
+                // --- UBAH DI SINI: Navigasi ke NewsEntryListPage ---
+                _navigate(context, const NewsEntryListPage());
+              },
               child: Container(
                 width: 64,
                 height: 64,

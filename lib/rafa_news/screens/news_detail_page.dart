@@ -26,8 +26,9 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   void initState() {
     super.initState();
     
-    // 1. Inisialisasi views dengan data awal
-    _dynamicViews = widget.news.newsViews;
+    // 1. OPTIMISTIC UPDATE: Langsung tambah 1 secara visual agar terasa instan
+    // Nanti angka ini akan ditimpa oleh data asli dari server jika request selesai
+    _dynamicViews = widget.news.newsViews + 1;
 
     // 2. Panggil fungsi untuk increment views di server
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,14 +38,20 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
   Future<void> _fetchDetailAndIncrement() async {
     final request = context.read<CookieRequest>();
-    // URL Endpoint JSON yang sudah kita edit di Django
+    // URL Endpoint JSON
     final String url = '$baseUrl/news/${widget.news.id}/json-data';
 
     try {
       final response = await request.get(url);
+      
+      // --- PERBAIKAN UTAMA: CEK MOUNTED ---
+      // Jika widget sudah dibuang (user sudah back), hentikan proses di sini.
+      // Ini mencegah error "setState() called after dispose()"
+      if (!mounted) return;
+
       if (response != null && response['news_views'] != null) {
         setState(() {
-          // Update angka views di layar dengan data baru dari server
+          // Update angka views dengan data valid dari server
           _dynamicViews = response['news_views'];
         });
       }
