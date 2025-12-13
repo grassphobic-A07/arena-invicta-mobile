@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:arena_invicta_mobile/global/environments.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/global/widgets/glassy_header.dart';
+import 'package:arena_invicta_mobile/main.dart'; 
 import 'package:arena_invicta_mobile/hannan_quiz/models/public_quiz_detail_model.dart';
-import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_result_screen.dart'; // Import Result Screen
+import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -24,13 +26,11 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
   bool _isLoading = true;
   PublicQuizDetailEntry? _quizData; 
   
-  // Store user answers: { "question_id": "A" }
   final Map<String, String> _userAnswers = {};
 
   @override
   void initState() {
     super.initState();
-    // Fetch data after the first frame to access Provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchQuizDetail();
     });
@@ -46,14 +46,12 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
       });
     } catch (e) {
       debugPrint("Error fetching quiz: $e");
-      // Handle error (e.g. pop back)
       if (mounted) Navigator.pop(context);
     }
   }
 
   void _answerQuestion(int questionId, String selectedOption) {
     setState(() {
-      // Save the answer mapping: key must be string for JSON encoding later
       _userAnswers[questionId.toString()] = selectedOption;
 
       if (_currentIndex < _quizData!.questions.length - 1) {
@@ -67,7 +65,6 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
   Future<void> _submitQuiz() async {
     final request = context.read<CookieRequest>();
     
-    // Show loading indicator
     showDialog(
       context: context, 
       barrierDismissible: false,
@@ -82,7 +79,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
         }),
       );
 
-      if (mounted) Navigator.pop(context); // Close loading
+      if (mounted) Navigator.pop(context); 
 
       if (response != null && mounted) {
         Navigator.pushReplacement(
@@ -91,14 +88,13 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
             quizTitle: widget.title,
             score: response['score'],
             total: response['total'],
-            // Pass the leaderboard list from response
             leaderboardData: response['leaderboard'] ?? [], 
           )),
         );
       }
 
     } catch (e) {
-       if (mounted) Navigator.pop(context); // Close loading
+       if (mounted) Navigator.pop(context);
        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error submitting: $e")));
     }
   }
@@ -113,6 +109,9 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 2. Access UserProvider for the header
+    final userProvider = context.watch<UserProvider>();
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: ArenaColor.darkAmethyst,
@@ -124,24 +123,18 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
 
     return Scaffold(
       backgroundColor: ArenaColor.darkAmethyst,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(widget.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Stack(
         children: [
            Positioned(top: -100, right: -100, child: _buildGlowCircle(ArenaColor.purpleX11)),
            Positioned(bottom: -50, left: -50, child: _buildGlowCircle(ArenaColor.dragonFruit)),
-           
-           SafeArea(
+           Positioned.fill(
              child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 70, // Space for header
+                left: 24, 
+                right: 24, 
+                bottom: 24
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -171,7 +164,6 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
                   ),
                   const Spacer(flex: 2),
                   
-                  // Passing Question ID to the answer handler
                   _buildOptionBtn(question.id, "A", question.options.a),
                   _buildOptionBtn(question.id, "B", question.options.b),
                   _buildOptionBtn(question.id, "C", question.options.c),
@@ -180,6 +172,13 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
                 ],
               ),
             ),
+           ),
+
+           GlassyHeader(
+             userProvider: userProvider, 
+             isHome: false, 
+             title: "Arena Invicta", 
+             subtitle: widget.title 
            ),
         ],
       ),
