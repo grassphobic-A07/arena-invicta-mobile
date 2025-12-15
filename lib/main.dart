@@ -25,6 +25,8 @@ import 'package:arena_invicta_mobile/rafa_news/widgets/hot_news_carousel.dart';
 
 import 'package:arena_invicta_mobile/adam_discussions/widgets/hot_discussions_section.dart';
 
+import 'package:arena_invicta_mobile/naufal_leagues/screens/league_dashboard_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -65,6 +67,7 @@ class MyApp extends StatelessWidget {
           RegisterPage.routeName: (context) => const RegisterPage(),
           ProfilePage.routeName: (context) => const ProfilePage(),
           NewsEntryListPage.routeName: (context) => const NewsEntryListPage(),
+          '/leagues': (context) => const LeagueDashboardPage(),
         },
       ),
     );
@@ -329,6 +332,7 @@ class _HomePageState extends State<HomePage> {
           
           // 4. NAVBAR
           GlassyNavbar(userProvider: userProvider, isHome: true, fabIcon: Icons.grid_view_rounded, onFabTap: () {}),
+          
 
           // 5. TOMBOL ADD NEWS
           if (canCreate)
