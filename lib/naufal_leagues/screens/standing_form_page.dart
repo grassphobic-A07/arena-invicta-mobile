@@ -2,16 +2,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:arena_invicta_mobile/global/environments.dart';
+
+// Import Global Widgets & Colors (Sesuaikan path jika berbeda)
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+
+// Import Models & Services
+import 'package:arena_invicta_mobile/naufal_leagues/models/standing.dart';
 import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/standing.dart'; // Import Standing
 import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
 
 class StandingFormPage extends StatefulWidget {
-  // Tambahkan parameter opsional ini
-  final Standing? standing; 
-  
+  final Standing? standing; // Jika null berarti mode CREATE, jika ada berarti EDIT
+
   const StandingFormPage({super.key, this.standing});
 
   @override
@@ -21,202 +23,250 @@ class StandingFormPage extends StatefulWidget {
 class _StandingFormPageState extends State<StandingFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  String _season = "2023/2024";
-  Team? _selectedTeam;
-  int _played = 0;
-  int _win = 0;
-  int _draw = 0;
-  int _loss = 0;
-  int _points = 0;
-  int _gf = 0;
-  int _ga = 0;
+  // Controllers untuk Input Angka
+  final TextEditingController _winController = TextEditingController();
+  final TextEditingController _drawController = TextEditingController();
+  final TextEditingController _lossController = TextEditingController();
+  final TextEditingController _gfController = TextEditingController();
+  final TextEditingController _gaController = TextEditingController();
 
-  List<Team> _teamList = [];
+  // State untuk Dropdown & Data
+  int? _selectedTeamId;
+  String _season = "23/24"; // Default season (bisa dikembangkan jadi dropdown juga)
+  List<Team> _teams = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    final request = context.read<CookieRequest>();
+    _fetchTeams(); // Ambil data tim saat halaman dibuka
     
-    // 1. Ambil Data Teams
-    LeagueService().fetchTeams(request).then((teams) {
+    // Jika mode EDIT, isi form dengan data yang ada
+    if (widget.standing != null) {
+      final data = widget.standing!.fields;
+      _selectedTeamId = data.team; // ID Team dari object Standing
+      _season = data.season;
+      _winController.text = data.win.toString();
+      _drawController.text = data.draw.toString();
+      _lossController.text = data.loss.toString();
+      _gfController.text = data.gf.toString();
+      _gaController.text = data.ga.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    // Bersihkan controller agar tidak memakan memori
+    _winController.dispose();
+    _drawController.dispose();
+    _lossController.dispose();
+    _gfController.dispose();
+    _gaController.dispose();
+    super.dispose();
+  }
+
+  // Fungsi Asinkronus mengambil daftar Tim dari Django
+  Future<void> _fetchTeams() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final teams = await LeagueService().fetchTeams(request);
       setState(() {
-        _teamList = teams;
-        
-        // 2. JIKA MODE EDIT (widget.standing tidak null)
-        if (widget.standing != null) {
-          // Isi form dengan data lama
-          _season = widget.standing!.fields.season;
-          _played = widget.standing!.fields.played;
-          _win = widget.standing!.fields.win;
-          _draw = widget.standing!.fields.draw;
-          _loss = widget.standing!.fields.loss;
-          _points = widget.standing!.fields.points;
-          _gf = widget.standing!.fields.gf;
-          _ga = widget.standing!.fields.ga;
-          
-          // Cari team yang sesuai di dropdown
-          // Kita cari tim yang ID-nya sama dengan standing.fields.team
-          try {
-            _selectedTeam = teams.firstWhere((t) => t.pk == widget.standing!.fields.team);
-          } catch (e) {
-            // Team mungkin terhapus atau tidak ditemukan
-          }
-        }
+        _teams = teams;
+        _isLoading = false;
       });
-    });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal memuat tim: $e")),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    // Cek apakah mode edit
-    final bool isEditing = widget.standing != null; 
+    final isEdit = widget.standing != null;
 
     return Scaffold(
-      backgroundColor: ArenaColor.darkAmethyst,
+      backgroundColor: ArenaColor.darkAmethyst, // Warna Background Utama
       appBar: AppBar(
-        // Judul Dinamis
-        title: Text(isEditing ? "Edit Standing" : "Add Standing Data", style: const TextStyle(color: Colors.white)),
+        title: Text(
+          isEdit ? "Edit Data Klasemen" : "Tambah Data Klasemen",
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              // Dropdown Team (Disable jika Edit, biar ga ganti tim sembarangan)
-              DropdownButtonFormField<Team>(
-                decoration: _inputDecoration("Select Team"),
-                value: _selectedTeam,
-                items: _teamList.map((Team team) {
-                  return DropdownMenuItem<Team>(
-                    value: team,
-                    child: Text(team.fields.name, style: const TextStyle(color: Colors.black87)),
-                  );
-                }).toList(),
-                onChanged: isEditing ? null : (Team? newValue) { // Disable if editing
-                  setState(() {
-                    _selectedTeam = newValue;
-                  });
-                },
-                validator: (value) => value == null ? "Pilih tim terlebih dahulu" : null,
-                dropdownColor: Colors.white,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                initialValue: _season,
-                decoration: _inputDecoration("Season"),
-                style: const TextStyle(color: Colors.white),
-                onChanged: (val) => _season = val,
-              ),
-              const SizedBox(height: 16),
-
-              // Statistik
-              Row(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit))
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(20),
                 children: [
-                  Expanded(child: _buildNumberField("Played", _played, (val) => _played = val)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildNumberField("Points", _points, (val) => _points = val)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _buildNumberField("Win", _win, (val) => _win = val)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildNumberField("Draw", _draw, (val) => _draw = val)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildNumberField("Loss", _loss, (val) => _loss = val)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _buildNumberField("GF", _gf, (val) => _gf = val)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildNumberField("GA", _ga, (val) => _ga = val)),
-                ],
-              ),
-
-              const SizedBox(height: 40),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ArenaColor.dragonFruit,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      int gd = _gf - _ga;
-
-                      // Tentukan URL dan Payload
-                      String url;
-                      if (isEditing) {
-                        url = "$baseUrl/leagues/api/standings/edit/${widget.standing!.pk}/";
-                      } else {
-                        url = "$baseUrl/leagues/api/standings/create/";
-                      }
-
-                      final response = await request.postJson(
-                        url,
-                        jsonEncode({
-                          'team_id': _selectedTeam!.pk.toString(),
-                          'season': _season,
-                          'played': _played.toString(),
-                          'win': _win.toString(),
-                          'draw': _draw.toString(),
-                          'loss': _loss.toString(),
-                          'points': _points.toString(),
-                          'gf': _gf.toString(),
-                          'ga': _ga.toString(),
-                          'gd': gd.toString(),
-                        }),
+                  // --- 1. DROPDOWN TEAM ---
+                  const Text("Tim", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<int>(
+                    value: _selectedTeamId,
+                    dropdownColor: const Color(0xFF2A2045), // Warna dropdown menu
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _inputDecoration("Pilih Tim"),
+                    items: _teams.map((Team team) {
+                      return DropdownMenuItem<int>(
+                        value: team.pk,
+                        child: Text(team.fields.name),
                       );
+                    }).toList(),
+                    onChanged: isEdit 
+                        ? null // Jika Edit, tim tidak boleh diganti (opsional logic)
+                        : (value) {
+                            setState(() {
+                              _selectedTeamId = value;
+                            });
+                          },
+                    validator: (value) => value == null ? "Harap pilih tim!" : null,
+                  ),
+                  const SizedBox(height: 20),
 
-                      if (context.mounted) {
-                        if (response['status'] == 'success') {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'])));
-                          Navigator.pop(context, true);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${response['message']}")));
+                  // --- 2. INPUT STATISTIK PERTANDINGAN ---
+                  Row(
+                    children: [
+                      Expanded(child: _buildNumberField("Menang (Win)", _winController)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildNumberField("Seri (Draw)", _drawController)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildNumberField("Kalah (Loss)", _lossController)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- 3. INPUT STATISTIK GOL ---
+                  Row(
+                    children: [
+                      Expanded(child: _buildNumberField("Gol Masuk (GF)", _gfController)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildNumberField("Kebobolan (GA)", _gaController)),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
+                  // --- 4. TOMBOL SIMPAN ---
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ArenaColor.dragonFruit,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        // Tampilkan loading dialog (opsional) atau langsung proses
+                        
+                        // Siapkan Data JSON
+                        final data = {
+                          "team_id": _selectedTeamId,
+                          "season": _season,
+                          "win": int.parse(_winController.text),
+                          "draw": int.parse(_drawController.text),
+                          "loss": int.parse(_lossController.text),
+                          "gf": int.parse(_gfController.text),
+                          "ga": int.parse(_gaController.text),
+                          // Poin, Played, GD dihitung otomatis di Backend Django
+                        };
+
+                        // Panggil Service
+                        final service = LeagueService();
+                        Map<String, dynamic> response;
+
+                        try {
+                          if (isEdit) {
+                            response = await service.editStanding(request, widget.standing!.pk, data);
+                          } else {
+                            response = await service.createStanding(request, data);
+                          }
+
+                          if (context.mounted) {
+                            if (response['status'] == 'success') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Data berhasil disimpan!")),
+                              );
+                              // Kembali ke halaman sebelumnya dengan membawa sinyal 'true' (refresh)
+                              Navigator.pop(context, true); 
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Gagal: ${response['message']}"),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Terjadi kesalahan: $e")),
+                            );
+                          }
                         }
                       }
-                    }
-                  },
-                  child: Text(isEditing ? "Update Data" : "Save Data", style: const TextStyle(color: Colors.white, fontSize: 16)),
-                ),
+                    },
+                    child: Text(
+                      isEdit ? "Update Perubahan" : "Simpan Data",
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
+  // Helper Widget untuk Input Angka yang Rapi
+  Widget _buildNumberField(String label, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration("0"),
+          validator: (value) {
+            if (value == null || value.isEmpty) return "Wajib";
+            if (int.tryParse(value) == null) return "Angka";
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  // Styling Input Decoration
+  InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white30),
       filled: true,
       fillColor: Colors.white.withOpacity(0.1),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-    );
-  }
-
-  // Helper updated untuk menerima initial value
-  Widget _buildNumberField(String label, int initialVal, Function(int) onChanged) {
-    return TextFormField(
-      initialValue: initialVal.toString(), // PREFILL DATA
-      decoration: _inputDecoration(label),
-      style: const TextStyle(color: Colors.white),
-      keyboardType: TextInputType.number,
-      onChanged: (val) => onChanged(int.tryParse(val) ?? 0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: ArenaColor.dragonFruit),
+      ),
+      errorStyle: const TextStyle(color: Colors.redAccent),
     );
   }
 }

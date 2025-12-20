@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/standing.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/screens/standing_form_page.dart';
+
+import 'package:arena_invicta_mobile/main.dart'; // UserProvider
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/models/standing.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/screens/standing_form_page.dart';
 
 class LeagueStandingsTab extends StatefulWidget {
   const LeagueStandingsTab({super.key});
@@ -15,210 +16,219 @@ class LeagueStandingsTab extends StatefulWidget {
 }
 
 class _LeagueStandingsTabState extends State<LeagueStandingsTab> {
-  // Kita butuh dua data: Standings (untuk angka) dan Teams (untuk nama tim)
-  Future<Map<String, dynamic>>? _dataFuture;
-  
-  // State untuk filter musim
-  String? _selectedSeason;
-  List<String> _availableSeasons = [];
+  late Future<List<Standing>> _futureStandings;
+  final Map<int, String> _teamNameMap = {};
 
   @override
   void initState() {
     super.initState();
-    _refreshData();
-  }
-
-  void _refreshData() {
     final request = context.read<CookieRequest>();
-    setState(() {
-      _dataFuture = _fetchAllData(request);
-    });
+    _futureStandings = _fetchAllData(request);
   }
 
-  Future<Map<String, dynamic>> _fetchAllData(CookieRequest request) async {
-    final service = LeagueService();
-    final responses = await Future.wait([
-      service.fetchStandings(request), // Index 0
-      service.fetchTeams(request),     // Index 1
-    ]);
-
-    return {
-      "standings": responses[0] as List<Standing>,
-      "teams": responses[1] as List<Team>,
-    };
-  }
-
-  // Helper untuk mendapatkan nama tim berdasarkan ID
-  String _getTeamName(int teamId, List<Team> teams) {
+  Future<List<Standing>> _fetchAllData(CookieRequest request) async {
     try {
-      return teams.firstWhere((t) => t.pk == teamId).fields.name;
+      final teams = await LeagueService().fetchTeams(request);
+      _teamNameMap.clear();
+      for (var team in teams) {
+        _teamNameMap[team.pk] = team.fields.name;
+      }
+      return await LeagueService().fetchStandings(request);
     } catch (e) {
-      return "Team $teamId"; // Fallback jika tim terhapus
+      throw Exception("Gagal: $e");
     }
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      final request = context.read<CookieRequest>();
+      _futureStandings = _fetchAllData(request);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Cek apakah user admin (untuk menampilkan tombol edit)
-    // Asumsi: Logic role ada di UserProvider, tapi untuk simplifikasi kita tampilkan tombol edit
-    // Nanti tombol edit akan divalidasi backend.
-    
-    return Scaffold(
-      backgroundColor: Colors.transparent, // Agar background dashboard terlihat
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: ArenaColor.dragonFruit,
-        onPressed: () async {
-          // Navigasi ke Form Tambah (Create)
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const StandingFormPage()),
-          );
-          if (result == true) _refreshData(); // Refresh jika ada data baru
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text("Belum ada data."));
-          }
+    final userProvider = context.watch<UserProvider>();
+    final isAdmin = userProvider.isLoggedIn && 
+        (userProvider.role == UserRole.admin || userProvider.role == UserRole.staff);
 
-          final allStandings = snapshot.data!['standings'] as List<Standing>;
-          final allTeams = snapshot.data!['teams'] as List<Team>;
-
-          if (allStandings.isEmpty) {
-            return const Center(child: Text("Belum ada data klasemen."));
-          }
-
-          // 1. Ekstrak Season Unik
-          if (_availableSeasons.isEmpty) {
-            final seasons = allStandings.map((s) => s.fields.season).toSet().toList();
-            seasons.sort(); // Urutkan string
-            _availableSeasons = seasons;
-            // Default pilih season terakhir (terbaru)
-            if (_selectedSeason == null && seasons.isNotEmpty) {
-              _selectedSeason = seasons.last;
-            }
-          }
-
-          // 2. Filter data berdasarkan Season terpilih
-          final filteredStandings = allStandings
-              .where((s) => s.fields.season == _selectedSeason)
-              .toList();
-
-          // 3. Sorting (Poin > GD > GF)
-          filteredStandings.sort((a, b) {
-            int cmp = b.fields.points.compareTo(a.fields.points);
-            if (cmp != 0) return cmp;
-            int cmpGd = b.fields.gd.compareTo(a.fields.gd);
-            if (cmpGd != 0) return cmpGd;
-            return b.fields.gf.compareTo(a.fields.gf);
-          });
-
-          return Column(
+    return Column(
+      children: [
+        // --- 1. HEADER TABEL ---
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3), // Latar header lebih gelap
+            border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.1))),
+          ),
+          child: Row(
             children: [
-              // --- DROPDOWN SEASON ---
-              Container(
-                padding: const EdgeInsets.all(12),
-                color: Colors.black12,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Pilih Musim:",
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                    DropdownButton<String>(
-                      value: _selectedSeason,
-                      dropdownColor: ArenaColor.darkAmethyst,
-                      style: const TextStyle(color: Colors.white),
-                      items: _availableSeasons.map((String season) {
-                        return DropdownMenuItem<String>(
-                          value: season,
-                          child: Text(season),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedSeason = newValue;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              // --- TABEL KLASEMEN ---
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columnSpacing: 18,
-                      headingRowColor: MaterialStateProperty.all(Colors.white.withOpacity(0.1)),
-                      columns: const [
-                        DataColumn(label: Text("Pos", style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text("Team", style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text("P"), tooltip: "Played"),
-                        DataColumn(label: Text("W"), tooltip: "Won"),
-                        DataColumn(label: Text("D"), tooltip: "Draw"),
-                        DataColumn(label: Text("L"), tooltip: "Loss"),
-                        DataColumn(label: Text("GF"), tooltip: "Goals For"),
-                        DataColumn(label: Text("GA"), tooltip: "Goals Against"),
-                        DataColumn(label: Text("GD"), tooltip: "Goal Difference"),
-                        DataColumn(label: Text("Pts", style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text("Aksi")), // Kolom Edit
-                      ],
-                      rows: List<DataRow>.generate(filteredStandings.length, (index) {
-                        final s = filteredStandings[index];
-                        return DataRow(cells: [
-                          DataCell(Text("${index + 1}")), // Posisi
-                          DataCell(Text(
-                            _getTeamName(s.fields.team, allTeams),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          )),
-                          DataCell(Text("${s.fields.played}")),
-                          DataCell(Text("${s.fields.win}")),
-                          DataCell(Text("${s.fields.draw}")),
-                          DataCell(Text("${s.fields.loss}")),
-                          DataCell(Text("${s.fields.gf}")),
-                          DataCell(Text("${s.fields.ga}")),
-                          DataCell(Text("${s.fields.gd}")),
-                          DataCell(Text(
-                            "${s.fields.points}",
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: ArenaColor.dragonFruit),
-                          )),
-                          DataCell(
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.orange, size: 20),
-                              onPressed: () async {
-                                // Navigasi ke Form Edit (bawa data objek standing)
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => StandingFormPage(standing: s),
-                                  ),
-                                );
-                                if (result == true) _refreshData(); // Refresh list jika berhasil edit
-                              },
-                            ),
-                          ),
-                        ]);
-                      }),
-                    ),
-                  ),
-                ),
-              ),
+              _headerText("Pos", width: 35),
+              Expanded(child: _headerText("Klub", align: TextAlign.left)),
+              _headerText("M", width: 35),   // Main
+              _headerText("M", width: 35),   // Menang (Opsional)
+              _headerText("K", width: 35),   // Kalah (Opsional)
+              _headerText("GD", width: 40),  // Goal Difference
+              _headerText("Pts", width: 40, isBold: true), // Poin
             ],
-          );
-        },
+          ),
+        ),
+
+        // --- 2. ISI TABEL (LIST) ---
+        Expanded(
+          child: FutureBuilder<List<Standing>>(
+            future: _futureStandings,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit));
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: ListView(
+                    children: const [
+                       SizedBox(height: 100),
+                       Center(child: Text("Belum ada data klasemen.", style: TextStyle(color: Colors.white70))),
+                    ],
+                  ),
+                );
+              }
+
+              final data = snapshot.data!;
+              
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                color: ArenaColor.dragonFruit,
+                backgroundColor: const Color(0xFF2A2045),
+                child: ListView.builder(
+                  padding: EdgeInsets.zero, // Padding dihandle container per item
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    final standing = data[index];
+                    final teamName = _teamNameMap[standing.fields.team] ?? "Team";
+                    
+                    // Logic Warna Posisi
+                    Color rowColor = Colors.transparent;
+                    Color posColor = Colors.white;
+                    
+                    if (index == 0) {
+                      posColor = Colors.amberAccent; // Juara = Emas
+                    } else if (index >= data.length - 3 && data.length > 5) {
+                      posColor = Colors.redAccent;   // Degradasi = Merah
+                    }
+
+                    return InkWell(
+                      // Admin bisa tap untuk edit/delete
+                      onTap: isAdmin ? () => _showOptions(context, standing, teamName) : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: rowColor,
+                          border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+                        ),
+                        child: Row(
+                          children: [
+                            // Posisi
+                            SizedBox(
+                              width: 35,
+                              child: Text(
+                                "${index + 1}",
+                                style: TextStyle(color: posColor, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            
+                            // Nama Tim
+                            Expanded(
+                              child: Text(
+                                teamName,
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            
+                            // Statistik
+                            _cellText("${standing.fields.played}", width: 35),
+                            _cellText("${standing.fields.win}", width: 35, color: Colors.white54),
+                            _cellText("${standing.fields.loss}", width: 35, color: Colors.white54),
+                            _cellText("${standing.fields.gd}", width: 40, color: standing.fields.gd > 0 ? Colors.greenAccent : (standing.fields.gd < 0 ? Colors.redAccent : Colors.white)),
+                            _cellText("${standing.fields.points}", width: 40, isBold: true),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper Widgets
+  Widget _headerText(String text, {double? width, TextAlign align = TextAlign.center, bool isBold = false}) {
+    final style = TextStyle(
+      color: Colors.white54, 
+      fontSize: 12, 
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal
+    );
+    
+    if (width != null) {
+      return SizedBox(width: width, child: Text(text, textAlign: align, style: style));
+    }
+    return Text(text, textAlign: align, style: style);
+  }
+
+  Widget _cellText(String text, {double? width, Color color = Colors.white, bool isBold = false}) {
+    final style = TextStyle(
+      color: color, 
+      fontSize: 13, 
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal
+    );
+
+    if (width != null) {
+      return SizedBox(width: width, child: Text(text, textAlign: TextAlign.center, style: style));
+    }
+    return Text(text, style: style);
+  }
+
+  void _showOptions(BuildContext context, Standing standing, String teamName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2045),
+        title: Text("Kelola $teamName", style: const TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            child: const Text("Edit Statistik", style: TextStyle(color: Colors.blueAccent)),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final res = await Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (_) => StandingFormPage(standing: standing))
+              );
+              if (res == true) _refresh();
+            },
+          ),
+          TextButton(
+            child: const Text("Hapus", style: TextStyle(color: Colors.redAccent)),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              _confirmDelete(context, standing);
+            },
+          ),
+        ],
       ),
     );
+  }
+
+  void _confirmDelete(BuildContext context, Standing standing) {
+     final req = context.read<CookieRequest>();
+     LeagueService().deleteStanding(req, standing.pk).then((_) {
+       _refresh();
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data dihapus")));
+     });
   }
 }

@@ -62,6 +62,36 @@ class LeagueService {
     );
   }
 
+  Future<Map<String, dynamic>> createMatch(
+      CookieRequest request, Map<String, dynamic> data) async {
+    return _postData(
+      request: request,
+      endpoint: 'leagues/api/matches/create/',
+      data: data,
+    );
+  }
+
+  Future<Map<String, dynamic>> editMatch(
+      CookieRequest request, int id, Map<String, dynamic> data) async {
+    return _postData(
+      request: request,
+      endpoint: 'leagues/api/matches/edit/$id/',
+      data: data,
+    );
+  }
+
+  Future<Map<String, dynamic>> deleteMatch(
+      CookieRequest request, int id) async {
+    final String url = '$baseUrl/leagues/api/matches/delete/$id/';
+    try {
+      final response = await request.postJson(url, jsonEncode({}));
+      return response;
+    } catch (e) {
+      print("Error deleting match $id: $e");
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
   Future<List<Standing>> fetchStandings(CookieRequest request) async {
     return _fetchData<Standing>(
       request: request,
@@ -99,6 +129,26 @@ class LeagueService {
       endpoint: 'leagues/api/teams/create/',
       data: data,
     );
+  }
+
+  Future<Map<String, dynamic>> editTeam(
+      CookieRequest request, int id, Map<String, dynamic> data) async {
+    return _postData(
+      request: request,
+      endpoint: 'leagues/api/teams/edit/$id/',
+      data: data,
+    );
+  }
+
+  Future<Map<String, dynamic>> deleteTeam(
+      CookieRequest request, int id) async {
+    final String url = '$baseUrl/leagues/api/teams/delete/$id/';
+    try {
+      final response = await request.postJson(url, jsonEncode({}));
+      return response;
+    } catch (e) {
+      return {"status": "error", "message": e.toString()};
+    }
   }
 
   // Cocok dengan views.py: create_standing_flutter
