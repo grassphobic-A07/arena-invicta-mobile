@@ -9,7 +9,7 @@ i. Nama-nama Anggota Kelompok:
 ii. Deskripsi Aplikasi (Cerita & Manfaat Aplikasi)
 ### Arena Invicta Mobile
 [Link Download Aplikasi Arena Invicta via Bitrise](https://app.bitrise.io/app/7998e549-74b1-4353-bce0-e212279f2fbf/installable-artifacts/d2b6e234a093074c/public-install-page/54c0a137db2b22ac6be1fe4736fd69b4)
-
+[![Build Status](https://app.bitrise.io/app/7998e549-74b1-4353-bce0-e212279f2fbf/status.svg?token=uucFNi8cOKwwTHuej_zQEA&branch=main)](https://app.bitrise.io/app/7998e549-74b1-4353-bce0-e212279f2fbf)
 [LINK WEBSITE ARENA INVICTA USED AS BASE INTEGRATION APP 💻💻](https://neal-guarddin-arenainvicta.pbp.cs.ui.ac.id/)
 
 **Arena Invicta** adalah platform digital komprehensif yang dirancang khusus untuk para penggemar sepak bola sejati. Aplikasi ini menyajikan dua pilar utama: **berita terkini** dengan analisis mendalam (fitur utama) dan **kuis interaktif** yang menantang. Sebagai "Arena yang Tak Terkalahkan", kami bertujuan menjadi sumber informasi tepercaya yang membedah taktik, melaporkan fakta, dan menjauhkan diri dari gosip murahan. Di sisi lain, kami menyediakan panggung bagi para suporter untuk menguji dan membuktikan pengetahuan mereka, mengubah passion pasif menjadi sebuah pencapaian yang membanggakan. Arena Invicta adalah tempat di mana pecinta olahraga tidak hanya membaca, tetapi juga berpartisipasi dan berkompetisi.
