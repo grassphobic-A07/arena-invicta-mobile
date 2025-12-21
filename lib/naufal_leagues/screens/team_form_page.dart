@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart'; // Import Model Team
+import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart'; 
 import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
 
 class TeamFormPage extends StatefulWidget {
-  final Team? team; // Tambahkan parameter ini
+  final Team? team;
 
   const TeamFormPage({super.key, this.team});
 
@@ -18,22 +18,19 @@ class _TeamFormPageState extends State<TeamFormPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _shortNameController;
-  late TextEditingController _yearController;
+  // Controller Tahun dihapus
 
   @override
   void initState() {
     super.initState();
-    // Isi data jika mode EDIT
     _nameController = TextEditingController(text: widget.team?.fields.name ?? "");
     _shortNameController = TextEditingController(text: widget.team?.fields.shortName ?? "");
-    _yearController = TextEditingController(text: widget.team != null ? widget.team!.fields.foundedYear.toString() : "");
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _shortNameController.dispose();
-    _yearController.dispose();
     super.dispose();
   }
 
@@ -57,8 +54,9 @@ class _TeamFormPageState extends State<TeamFormPage> {
             _buildTextField("Nama Tim (Lengkap)", _nameController),
             const SizedBox(height: 16),
             _buildTextField("Nama Singkat (3-5 Huruf)", _shortNameController),
-            const SizedBox(height: 16),
-            _buildTextField("Tahun Berdiri", _yearController, isNumber: true),
+            
+            // Input Field Tahun dihapus dari sini
+
             const SizedBox(height: 24),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -68,10 +66,10 @@ class _TeamFormPageState extends State<TeamFormPage> {
               ),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
+                  // Data tahun dihapus dari map ini
                   final data = {
                     "name": _nameController.text,
                     "short_name": _shortNameController.text,
-                    "founded_year": int.tryParse(_yearController.text) ?? 2023,
                   };
 
                   try {
@@ -107,11 +105,10 @@ class _TeamFormPageState extends State<TeamFormPage> {
     );
   }
     
-  // ... _buildTextField sama seperti sebelumnya ...
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildTextField(String label, TextEditingController controller) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      keyboardType: TextInputType.text,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,

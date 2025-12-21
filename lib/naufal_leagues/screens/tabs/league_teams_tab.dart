@@ -17,9 +17,8 @@ class LeagueTeamsTab extends StatefulWidget {
 }
 
 class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
-  // Variabel untuk menyimpan data
-  List<Team> _allTeams = [];      // Data asli dari Server
-  List<Team> _filteredTeams = []; // Data hasil filter pencarian
+  List<Team> _allTeams = [];
+  List<Team> _filteredTeams = [];
   bool _isLoading = true;
   String _searchQuery = "";
 
@@ -29,7 +28,6 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
     _fetchData();
   }
 
-  // Fungsi Fetch Data
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     final request = context.read<CookieRequest>();
@@ -38,7 +36,7 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
       if (mounted) {
         setState(() {
           _allTeams = teams;
-          _updateFilteredList(); // Filter ulang saat data baru masuk
+          _updateFilteredList();
           _isLoading = false;
         });
       }
@@ -47,7 +45,6 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
     }
   }
 
-  // Fungsi Filter Lokal
   void _updateFilteredList() {
     setState(() {
       if (_searchQuery.isEmpty) {
@@ -69,9 +66,9 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
 
     return Column(
       children: [
-        // --- 1. SEARCH BAR ---
+        // --- SEARCH BAR (Tetap dipertahankan karena fungsional) ---
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: TextField(
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
@@ -79,10 +76,11 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
               hintStyle: const TextStyle(color: Colors.white54),
               prefixIcon: const Icon(Icons.search, color: Colors.white54),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.1),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+              fillColor: const Color(0xFF2A2045),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
             ),
@@ -93,82 +91,90 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
           ),
         ),
 
-        // --- 2. LIST DATA ---
+        // --- LIST TIM ---
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit))
               : _filteredTeams.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.search_off, size: 48, color: Colors.white24),
-                          const SizedBox(height: 12),
-                          Text(
-                            _allTeams.isEmpty ? "Belum ada data tim." : "Tim tidak ditemukan.",
-                            style: const TextStyle(color: Colors.white54),
-                          ),
-                        ],
+                      child: Text(
+                        _allTeams.isEmpty ? "Belum ada data tim." : "Tim tidak ditemukan.",
+                        style: const TextStyle(color: Colors.white54),
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: _fetchData, // Fitur Pull-to-Refresh
+                      onRefresh: _fetchData,
                       color: ArenaColor.dragonFruit,
                       backgroundColor: const Color(0xFF2A2045),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         itemCount: _filteredTeams.length,
+                        separatorBuilder: (ctx, index) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final team = _filteredTeams[index];
                           
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              
-                              // Index Angka
-                              leading: Container(
-                                width: 30,
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "${index + 1}", 
-                                  style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold, fontSize: 16),
-                                ),
-                              ),
-
-                              // Nama Tim
-                              title: Text(
-                                team.fields.name, 
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                              ),
-                              
-                              // Navigasi ke Detail
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
                               onTap: () {
                                 Navigator.push(
                                   context, 
                                   MaterialPageRoute(builder: (context) => TeamDetailPage(team: team)),
                                 );
                               },
-
-                              // Admin Edit
-                              trailing: isAdmin ? IconButton(
-                                icon: const Icon(Icons.edit, color: ArenaColor.dragonFruit),
-                                onPressed: () async {
-                                   final res = await Navigator.push(
-                                     context, 
-                                     MaterialPageRoute(builder: (_) => TeamFormPage(team: team))
-                                   );
-                                   if (res == true) _fetchData();
-                                },
-                              ) : null,
-                              
-                              // Admin Delete
-                              onLongPress: isAdmin ? () => _showDeleteDialog(context, team) : null,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.white10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Nama Tim (Fokus Utama)
+                                    Expanded(
+                                      child: Text(
+                                        team.fields.name, 
+                                        style: const TextStyle(
+                                          color: Colors.white, 
+                                          fontWeight: FontWeight.w600, 
+                                          fontSize: 15
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                    // Icon Arrow atau Edit (Admin)
+                                    if (isAdmin) 
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, size: 20, color: Colors.white54),
+                                            onPressed: () async {
+                                              final res = await Navigator.push(
+                                                context, 
+                                                MaterialPageRoute(builder: (_) => TeamFormPage(team: team))
+                                              );
+                                              if (res == true) _fetchData();
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, size: 20, color: Colors.redAccent),
+                                            onPressed: () => _showDeleteDialog(context, team),
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                          ),
+                                        ],
+                                      )
+                                    else
+                                      const Icon(Icons.chevron_right, color: Colors.white24),
+                                  ],
+                                ),
+                              ),
                             ),
                           );
                         },
@@ -197,7 +203,7 @@ class _LeagueTeamsTabState extends State<LeagueTeamsTab> {
               Navigator.pop(c);
               final req = context.read<CookieRequest>();
               await LeagueService().deleteTeam(req, team.pk);
-              _fetchData(); // Refresh list
+              _fetchData(); 
             },
           ),
         ],

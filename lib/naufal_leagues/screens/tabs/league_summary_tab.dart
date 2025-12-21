@@ -1,14 +1,15 @@
+import 'dart:ui'; // Wajib untuk ImageFilter
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:intl/intl.dart';
 
-import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/match.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/standing.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart';
 import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
+// Import Model & Detail Pages
+import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart' as team_model;
+import 'package:arena_invicta_mobile/naufal_leagues/screens/team_detail_page.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/screens/match_detail_page.dart';
 
 class LeagueSummaryTab extends StatefulWidget {
   const LeagueSummaryTab({super.key});
@@ -18,173 +19,401 @@ class LeagueSummaryTab extends StatefulWidget {
 }
 
 class _LeagueSummaryTabState extends State<LeagueSummaryTab> {
-  // Data State
-  Match? _nextMatch;
-  List<Standing> _topStandings = [];
-  Map<int, String> _teamNameMap = {};
-  bool _isLoading = true;
+  late Future<Map<String, dynamic>> _dashboardFuture;
+  final LeagueService _service = LeagueService();
 
   @override
   void initState() {
     super.initState();
-    _fetchSummaryData();
+    final request = context.read<CookieRequest>();
+    _dashboardFuture = _service.fetchDashboardData(request);
   }
 
-  Future<void> _fetchSummaryData() async {
+  Future<void> _refreshData() async {
     final request = context.read<CookieRequest>();
+    setState(() {
+      _dashboardFuture = _service.fetchDashboardData(request);
+    });
+  }
+
+  // --- NAVIGASI KE TEAM DETAIL ---
+  void _navigateToTeamDetail(int teamId, String teamName) {
+    final tempTeam = team_model.Team(
+      model: "leagues.team",
+      pk: teamId,
+      fields: team_model.Fields(
+        name: teamName,
+        league: 0,
+        shortName: "",
+        foundedYear: null,
+      ),
+    );
+
+    Navigator.push(
+      context, 
+      MaterialPageRoute(builder: (context) => TeamDetailPage(team: tempTeam)),
+    );
+  }
+
+  // --- NAVIGASI KE MATCH DETAIL ---
+  void _navigateToMatchDetail(Map<String, dynamic> matchData) {
+    int matchId = matchData['id'] ?? 0;
+    if (matchId != 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MatchDetailPage(matchId: matchId)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("ID Pertandingan tidak valid."))
+      );
+    }
+  }
+
+  // --- FUNGSI PINDAH TAB (JIKA TOMBOL LIHAT SEMUA DIKLIK) ---
+  void _switchToTab(int index) {
+    // DefaultTabController digunakan untuk mengontrol TabBar dari child widget
     try {
-      // Panggil 3 API secara paralel agar cepat
-      final results = await Future.wait([
-        LeagueService().fetchMatches(request),
-        LeagueService().fetchStandings(request),
-        LeagueService().fetchTeams(request),
-      ]);
-
-      final matches = results[0] as List<Match>;
-      final standings = results[1] as List<Standing>;
-      final teams = results[2] as List<Team>;
-
-      // 1. Mapping Nama Tim
-      _teamNameMap = {for (var t in teams) t.pk: t.fields.name};
-
-      // 2. Cari Next Match (Status != FINISHED, urutkan tanggal terdekat)
-      final upcoming = matches.where((m) => m.fields.status != "FINISHED").toList();
-      upcoming.sort((a, b) => a.fields.date.compareTo(b.fields.date));
-      Match? next = upcoming.isNotEmpty ? upcoming.first : null;
-
-      // 3. Cari Top 3 Klasemen
-      // Asumsi API standing sudah terurut poinnya, kita ambil 3 pertama
-      final top3 = standings.take(3).toList();
-
-      if (mounted) {
-        setState(() {
-          _nextMatch = next;
-          _topStandings = top3;
-          _isLoading = false;
-        });
-      }
+      DefaultTabController.of(context).animateTo(index);
     } catch (e) {
-      debugPrint("Error fetching summary: $e");
-      if (mounted) setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Navigasi tab tidak tersedia saat ini."))
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit));
-    }
-
     return RefreshIndicator(
-      onRefresh: _fetchSummaryData,
+      onRefresh: _refreshData,
       color: ArenaColor.dragonFruit,
-      backgroundColor: const Color(0xFF2A2045),
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // --- SECTION 1: NEXT MATCH ---
-          const Text("Pertandingan Berikutnya", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _nextMatch != null 
-              ? _buildNextMatchCard(_nextMatch!)
-              : _buildEmptyState("Tidak ada jadwal mendatang."),
+      child: FutureBuilder<Map<String, dynamic>>(
+        future: _dashboardFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit));
+          } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!['status'] == 'error') {
+             return const Center(child: Text("Gagal memuat data dashboard.", style: TextStyle(color: Colors.white70)));
+          }
+
+          final data = snapshot.data!;
+          // Ambil top 5 saja untuk ringkasan
+          final standings = (data['standings'] as List).take(5).toList(); 
+          final recentMatches = data['recent_matches'] as List;
+          final upcomingMatches = data['upcoming_matches'] as List;
           
-          const SizedBox(height: 30),
+          const leagueName = "Premier League"; 
 
-          // --- SECTION 2: TOP KLASEMEN ---
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 100), 
             children: [
-              const Text("Puncak Klasemen", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              // Indikator kecil 3 besar
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                child: const Text("Top 3", style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
-              )
-            ],
-          ),
-          const SizedBox(height: 12),
-          _topStandings.isNotEmpty 
-              ? Column(children: _topStandings.map((s) => _buildStandingRow(s)).toList())
-              : _buildEmptyState("Belum ada data klasemen."),
-        ],
-      ),
-    );
-  }
+              // --- HERO TITLE ---
+              _buildGradientTitle(leagueName),
+              const SizedBox(height: 24),
 
-  // Widget: Kartu Big Match
-  Widget _buildNextMatchCard(Match match) {
-    final homeName = _teamNameMap[match.fields.homeTeam] ?? "Team Home";
-    final awayName = _teamNameMap[match.fields.awayTeam] ?? "Team Away";
-    final dateStr = DateFormat('EEEE, dd MMM yyyy').format(match.fields.date);
-    final timeStr = DateFormat('HH:mm').format(match.fields.date);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [ArenaColor.dragonFruit, Color(0xFF2A2045)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: ArenaColor.dragonFruit.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
-      child: Column(
-        children: [
-          Text(dateStr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(child: Text(homeName, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                child: Text(timeStr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+              // --- KLASEMEN CARD (Standings) ---
+              _buildGlassCard(
+                title: "Standings", // Judul Baru
+                icon: Icons.emoji_events_rounded, // Icon Piala
+                iconColor: Colors.amber,
+                // Tombol Lihat Semua -> Pindah ke Tab Standings (Index 2)
+                onSeeAll: () => _switchToTab(2), 
+                child: _buildStandingsTable(standings),
               ),
-              Expanded(child: Text(awayName, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))),
+              const SizedBox(height: 24),
+
+              // --- MATCH SUMMARY CARD ---
+              _buildGlassCard(
+                title: "Match Summary",
+                icon: Icons.sports_soccer_rounded,
+                iconColor: ArenaColor.dragonFruit,
+                // Tombol Lihat Semua -> Pindah ke Tab Matches (Index 1)
+                onSeeAll: () => _switchToTab(1),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionLabel("Hasil Terkini", Colors.grey),
+                    if (recentMatches.isEmpty) 
+                      const Padding(padding: EdgeInsets.all(12), child: Text("Belum ada pertandingan selesai.", style: TextStyle(color: Colors.white38, fontSize: 12))),
+                    ...recentMatches.map((m) => _buildMatchItem(m, isFinished: true)),
+
+                    const SizedBox(height: 20),
+                    
+                    _buildSectionLabel("Jadwal Mendatang", ArenaColor.dragonFruit),
+                    if (upcomingMatches.isEmpty) 
+                       const Padding(padding: EdgeInsets.all(12), child: Text("Belum ada jadwal mendatang.", style: TextStyle(color: Colors.white38, fontSize: 12))),
+                    ...upcomingMatches.map((m) => _buildMatchItem(m, isFinished: false)),
+                  ],
+                ),
+              ),
             ],
-          ),
-          const SizedBox(height: 16),
-          const Text("VS", style: TextStyle(color: Colors.white38, fontWeight: FontWeight.bold)),
-        ],
+          );
+        },
       ),
     );
   }
 
-  // Widget: Baris Klasemen Mini
-  Widget _buildStandingRow(Standing standing) {
-    final teamName = _teamNameMap[standing.fields.team] ?? "Team";
-    // Cari index untuk menentukan nomor urut (sedikit hacky karena data sudah di-slice)
-    final index = _topStandings.indexOf(standing) + 1;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border(left: BorderSide(color: index == 1 ? Colors.amber : Colors.white24, width: 4)),
+  // --- WIDGET HELPER UI MEWAH ---
+
+  Widget _buildGradientTitle(String text) {
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        colors: [Colors.white, ArenaColor.purpleX11, ArenaColor.dragonFruit],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(bounds),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 32, 
+          fontWeight: FontWeight.w900, 
+          color: Colors.white, 
+          letterSpacing: -1.0,
+        ),
       ),
+    );
+  }
+
+  // Update: Menambahkan parameter onSeeAll untuk tombol navigasi
+  Widget _buildGlassCard({
+    required String title, 
+    required IconData icon, 
+    required Color iconColor, 
+    required Widget child,
+    VoidCallback? onSeeAll, // Callback opsional
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF2A1B54).withOpacity(0.6), 
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ]
+          ),
+          child: Column(
+            children: [
+              // Card Header
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+                ),
+                child: Row(
+                  children: [
+                    Icon(icon, color: iconColor, size: 22),
+                    const SizedBox(width: 10),
+                    Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Spacer(),
+                    
+                    // TOMBOL LIHAT SEMUA (Kecil & Elegan)
+                    if (onSeeAll != null)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onSeeAll,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            ),
+                            child: Row(
+                              children: const [
+                                Text(
+                                  "Lihat Semua",
+                                  style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 10),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Card Body
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: child,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStandingsTable(List<dynamic> standings) {
+    if (standings.isEmpty) return const Text("No data.", style: TextStyle(color: Colors.white38));
+
+    return Column(
+      children: [
+        // Table Header
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: const [
+              SizedBox(width: 25, child: Text("#", style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold))),
+              Expanded(child: Text("TIM", style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold))),
+              SizedBox(width: 30, child: Center(child: Text("M", style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)))),
+              SizedBox(width: 30, child: Center(child: Text("GD", style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)))),
+              SizedBox(width: 35, child: Center(child: Text("PTS", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)))),
+            ],
+          ),
+        ),
+        const Divider(color: Colors.white10, height: 1),
+        
+        // Table Rows
+        ...standings.asMap().entries.map((entry) {
+          int idx = entry.key + 1;
+          var team = entry.value;
+          bool isTop = idx <= 4; 
+
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.02))),
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 25, child: Text("$idx", style: TextStyle(color: isTop ? ArenaColor.dragonFruit : Colors.white54, fontWeight: FontWeight.bold, fontSize: 13))),
+                
+                // Nama Tim
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      int teamId = team['team_id'] ?? team['id'] ?? 0;
+                      if (teamId != 0) {
+                        _navigateToTeamDetail(teamId, team['team_name']);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Detail tim tidak tersedia."))
+                        );
+                      }
+                    },
+                    child: Text(
+                      team['team_name'], 
+                      style: const TextStyle(
+                        color: ArenaColor.dragonFruit,
+                        fontWeight: FontWeight.w600, 
+                        fontSize: 13
+                      ), 
+                      overflow: TextOverflow.ellipsis
+                    ),
+                  )
+                ),
+
+                SizedBox(width: 30, child: Center(child: Text("${team['played']}", style: const TextStyle(color: Colors.white70, fontSize: 12)))),
+                SizedBox(width: 30, child: Center(child: Text("${team['gd']}", style: const TextStyle(color: Colors.white70, fontSize: 12)))),
+                Container(
+                  width: 35,
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  decoration: BoxDecoration(
+                    color: ArenaColor.purpleX11.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(child: Text("${team['points']}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildSectionLabel(String label, Color dotColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, top: 4),
       child: Row(
         children: [
-          Text("$index", style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(width: 16),
-          Expanded(child: Text(teamName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-          Text("${standing.fields.points} Pts", style: const TextStyle(color: ArenaColor.dragonFruit, fontWeight: FontWeight.bold)),
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Text(label.toUpperCase(), style: TextStyle(color: dotColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState(String msg) {
+  Widget _buildMatchItem(dynamic match, {required bool isFinished}) {
+    DateTime date = DateTime.parse(match['date']);
+    String formattedDate = DateFormat('d MMM').format(date);
+    String timeOrStatus = isFinished ? "FT" : DateFormat('HH:mm').format(date);
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
-      child: Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54)),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isFinished ? Colors.black.withOpacity(0.2) : ArenaColor.purpleX11.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isFinished ? Colors.white.withOpacity(0.05) : ArenaColor.purpleX11.withOpacity(0.2)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _navigateToMatchDetail(match),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(formattedDate, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
+                      Text(timeOrStatus, style: TextStyle(color: isFinished ? Colors.white : ArenaColor.dragonFruit, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(child: Text(match['home_team'], textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13))),
+                      
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.circular(4),
+                          border: isFinished ? Border.all(color: Colors.white10) : null
+                        ),
+                        child: Text(
+                          isFinished ? "${match['home_score']} - ${match['away_score']}" : "VS",
+                          style: TextStyle(color: isFinished ? Colors.white : Colors.white38, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+
+                      Expanded(child: Text(match['away_team'], textAlign: TextAlign.left, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

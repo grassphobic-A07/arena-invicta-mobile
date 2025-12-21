@@ -4,7 +4,6 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
 import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart'; 
-// PERBAIKAN DI SINI: Gunakan 'as' untuk menghindari konflik nama 'Fields'
 import 'package:arena_invicta_mobile/naufal_leagues/models/standing.dart' as standing_model;
 import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
 
@@ -18,7 +17,6 @@ class TeamDetailPage extends StatefulWidget {
 }
 
 class _TeamDetailPageState extends State<TeamDetailPage> {
-  // Gunakan alias 'standing_model' untuk mengakses class Standing
   standing_model.Standing? _teamStats;
   bool _isLoadingStats = true;
 
@@ -35,11 +33,9 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
       
       final stats = standings.firstWhere(
         (s) => s.fields.team == widget.team.pk,
-        // Gunakan alias 'standing_model' saat membuat dummy object
         orElse: () => standing_model.Standing(
           model: "leagues.standing", 
           pk: -1, 
-          // CONTOH KONFLIK SEBELUMNYA: 'Fields' sekarang spesifik milik standing_model
           fields: standing_model.Fields(
             league: 1, team: -1, season: "-", played: 0, win: 0, draw: 0, loss: 0, gf: 0, ga: 0, gd: 0, points: 0
           )
@@ -47,12 +43,12 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
       );
 
       if (stats.pk != -1) {
-        setState(() => _teamStats = stats);
+        if (mounted) setState(() => _teamStats = stats);
       }
     } catch (e) {
       debugPrint("Gagal load stats: $e");
     } finally {
-      setState(() => _isLoadingStats = false);
+      if (mounted) setState(() => _isLoadingStats = false);
     }
   }
 
@@ -61,58 +57,73 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
     return Scaffold(
       backgroundColor: ArenaColor.darkAmethyst,
       appBar: AppBar(
-        title: Text(widget.team.fields.name),
+        title: const Text("Detail Tim"), // Title umum agar tidak redundan
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // --- HEADER ---
-            Center(
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: ArenaColor.dragonFruit,
-                    child: Text(
-                      widget.team.fields.shortName,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.team.fields.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Didirikan Tahun ${widget.team.fields.foundedYear}",
-                    style: const TextStyle(color: Colors.white54),
-                  ),
-                ],
+            // --- HEADER NAMA TIM (Tanpa Logo & Tahun) ---
+            const SizedBox(height: 20),
+            Text(
+              widget.team.fields.name,
+              style: const TextStyle(
+                color: Colors.white, 
+                fontSize: 28, // Font lebih besar agar menonjol
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: ArenaColor.dragonFruit.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: ArenaColor.dragonFruit),
+              ),
+              child: Text(
+                widget.team.fields.shortName,
+                style: const TextStyle(color: ArenaColor.dragonFruit, fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(height: 30),
+            
+            const SizedBox(height: 40),
 
             // --- STATISTIK ---
             const Align(
               alignment: Alignment.centerLeft,
               child: Text("Statistik Musim Ini", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             
             _isLoadingStats
               ? const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit))
               : _teamStats != null
-                  ? _buildStatCard(_teamStats!.fields) // Kirim fields dari objek standing
+                  ? _buildStatCard(_teamStats!.fields)
                   : Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
-                      child: const Text("Tim ini belum memiliki data pertandingan di klasemen.", style: TextStyle(color: Colors.white54), textAlign: TextAlign.center),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05), 
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Column(
+                        children: const [
+                          Icon(Icons.query_stats, color: Colors.white24, size: 48),
+                          SizedBox(height: 12),
+                          Text(
+                            "Belum ada data pertandingan di klasemen.", 
+                            style: TextStyle(color: Colors.white54), 
+                            textAlign: TextAlign.center
+                          ),
+                        ],
+                      ),
                     ),
           ],
         ),
@@ -120,32 +131,45 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
     );
   }
 
-  // Parameter juga harus spesifik: Fields milik Standing
   Widget _buildStatCard(standing_model.Fields stats) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2045),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10)],
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF2A2045),
+            const Color(0xFF2A2045).withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Column(
         children: [
+           // Main Stats Row
            Row(
-             mainAxisAlignment: MainAxisAlignment.spaceAround,
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
              children: [
-               _statItem("Main", stats.played),
-               _statItem("Poin", stats.points, isHighlight: true),
-               _statItem("GD", stats.gd),
+               _statItemLarge("Poin", stats.points, true),
+               Container(width: 1, height: 40, color: Colors.white10),
+               _statItemLarge("Main", stats.played, false),
+               Container(width: 1, height: 40, color: Colors.white10),
+               _statItemLarge("GD", stats.gd, false),
              ],
            ),
-           const Divider(color: Colors.white10, height: 30),
+           const SizedBox(height: 24),
+           const Divider(color: Colors.white10),
+           const SizedBox(height: 24),
+           // Detail W-D-L Row
            Row(
              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
              children: [
-               _statItemSmall("W", stats.win, Colors.greenAccent),
-               _statItemSmall("D", stats.draw, Colors.grey),
-               _statItemSmall("L", stats.loss, Colors.redAccent),
+               _statItemSmall("Menang", stats.win, Colors.greenAccent),
+               _statItemSmall("Seri", stats.draw, Colors.grey),
+               _statItemSmall("Kalah", stats.loss, Colors.redAccent),
              ],
            )
         ],
@@ -153,24 +177,38 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
     );
   }
 
-  Widget _statItem(String label, int value, {bool isHighlight = false}) {
+  Widget _statItemLarge(String label, int value, bool isPrimary) {
     return Column(
       children: [
-        Text(value.toString(), style: TextStyle(color: isHighlight ? ArenaColor.dragonFruit : Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+        Text(
+          value.toString(), 
+          style: TextStyle(
+            color: isPrimary ? ArenaColor.dragonFruit : Colors.white, 
+            fontSize: 32, 
+            fontWeight: FontWeight.bold
+          )
+        ),
+        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 14)),
       ],
     );
   }
   
   Widget _statItemSmall(String label, int value, Color color) {
-    return Row(
+    return Column(
       children: [
         Container(
-          width: 10, height: 10, 
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle)
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            "$value", 
+            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)
+          ),
         ),
-        const SizedBox(width: 6),
-        Text("$value $label", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
       ],
     );
   }
