@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:intl/intl.dart'; // Pastikan add dependency intl di pubspec.yaml
+import 'package:intl/intl.dart'; 
 
 import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/match.dart';
 import 'package:arena_invicta_mobile/naufal_leagues/models/team.dart';
 import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
 
 class MatchFormPage extends StatefulWidget {
-  final Match? match; // Jika null = Create, Ada = Edit
+  // Kita ubah jadi Map agar fleksibel menerima data dari List API
+  final Map<String, dynamic>? matchData; 
 
-  const MatchFormPage({super.key, this.match});
+  const MatchFormPage({super.key, this.matchData});
 
   @override
   State<MatchFormPage> createState() => _MatchFormPageState();
@@ -38,15 +38,24 @@ class _MatchFormPageState extends State<MatchFormPage> {
     super.initState();
     _fetchTeams();
 
-    if (widget.match != null) {
-      final m = widget.match!.fields;
-      _homeTeamId = m.homeTeam;
-      _awayTeamId = m.awayTeam;
-      _selectedDate = m.date;
-      _selectedTime = TimeOfDay.fromDateTime(m.date); // Konversi DateTime ke TimeOfDay
-      _homeScoreController.text = m.homeScore.toString();
-      _awayScoreController.text = m.awayScore.toString();
-      _isFinished = m.status == "FINISHED";
+    // LOGIKA PENGISIAN DATA (EDIT MODE)
+    if (widget.matchData != null) {
+      final m = widget.matchData!;
+      _homeTeamId = m['home_team_id']; // Mengambil ID dari API yang baru kita update
+      _awayTeamId = m['away_team_id'];
+      
+      // Parsing Tanggal
+      try {
+        DateTime parsedDate = DateTime.parse(m['date']);
+        _selectedDate = parsedDate;
+        _selectedTime = TimeOfDay.fromDateTime(parsedDate);
+      } catch (e) {
+        // Fallback jika error parsing
+      }
+
+      _homeScoreController.text = (m['home_score'] ?? 0).toString();
+      _awayScoreController.text = (m['away_score'] ?? 0).toString();
+      _isFinished = m['is_finished'] ?? false;
     }
   }
 
@@ -63,7 +72,6 @@ class _MatchFormPageState extends State<MatchFormPage> {
     }
   }
 
-  // Helper untuk memilih Tanggal
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -74,7 +82,6 @@ class _MatchFormPageState extends State<MatchFormPage> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  // Helper untuk memilih Jam
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -86,7 +93,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    final isEdit = widget.match != null;
+    final isEdit = widget.matchData != null;
 
     return Scaffold(
       backgroundColor: ArenaColor.darkAmethyst,
@@ -102,7 +109,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // --- PILIH TIM (HOME & AWAY) ---
+                  // --- PILIH TIM ---
                   Row(
                     children: [
                       Expanded(
@@ -142,7 +149,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // --- SKOR & STATUS (Hanya relevan jika pertandingan sudah mulai/selesai) ---
+                  // --- SKOR & STATUS ---
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
@@ -178,20 +185,16 @@ class _MatchFormPageState extends State<MatchFormPage> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // Validasi tim sama
                         if (_homeTeamId == _awayTeamId) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tim Home dan Away tidak boleh sama!")));
                           return;
                         }
 
-                        // Gabungkan Date & Time
                         final finalDateTime = DateTime(
                           _selectedDate.year, _selectedDate.month, _selectedDate.day,
                           _selectedTime.hour, _selectedTime.minute
                         );
 
-                        // Siapkan Data
-                        // Format tanggal ISO 8601 string agar bisa diparse Django
                         final data = {
                           "home_team_id": _homeTeamId,
                           "away_team_id": _awayTeamId,
@@ -206,7 +209,8 @@ class _MatchFormPageState extends State<MatchFormPage> {
 
                         try {
                           if (isEdit) {
-                            response = await service.editMatch(request, widget.match!.pk, data);
+                            // Mengambil ID dari widget.matchData['id']
+                            response = await service.editMatch(request, widget.matchData!['id'], data);
                           } else {
                             response = await service.createMatch(request, data);
                           }
@@ -241,7 +245,7 @@ class _MatchFormPageState extends State<MatchFormPage> {
           value: value,
           dropdownColor: const Color(0xFF2A2045),
           style: const TextStyle(color: Colors.white),
-          isExpanded: true, // Agar teks panjang tidak overflow
+          isExpanded: true,
           items: _teams.map((t) => DropdownMenuItem(value: t.pk, child: Text(t.fields.name, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
           validator: (v) => v == null ? "Wajib" : null,

@@ -11,6 +11,7 @@ import 'package:arena_invicta_mobile/neal_auth/screens/register.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart'; 
 import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
 import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/screens/leagues_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -126,12 +127,25 @@ class ArenaInvictaDrawer extends StatelessWidget {
             ),
 
           ListTile(
-            leading: const Icon(Icons.emoji_events_rounded, color: Colors.white,),
-            title: const Text('League (Coming Soon)', style: TextStyle(color: Colors.white)),
+            leading: const Icon(
+              Icons.emoji_events_rounded, // Ikon Piala
+              color: Colors.white,        // Sesuaikan warna dengan tema drawer Anda
+            ),
+            title: const Text(
+              "League",                   // Hapus tulisan "(Coming Soon)"
+              style: TextStyle(
+                color: Colors.white,      // Sesuaikan warna teks
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             onTap: () {
+              // 1. Tutup Drawer terlebih dahulu
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("League Coming Soon!")),
+
+              // 2. Pindah ke halaman LeaguesPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LeaguesPage()),
               );
             },
           ),

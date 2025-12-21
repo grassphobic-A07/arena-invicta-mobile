@@ -46,6 +46,76 @@ class LeagueService {
     );
   }
 
+  Future<Map<String, dynamic>> fetchDashboardData(CookieRequest request) async {
+    final String url = '$baseUrl/leagues/api/dashboard/';
+    try {
+      final response = await request.get(url);
+      // PBP Django Auth biasanya otomatis decode JSON jika response content-type application/json
+      // Jika response masih berupa string, lakukan jsonDecode(response)
+      return response; 
+    } catch (e) {
+      print("Error fetching dashboard: $e");
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchStandingsPage(CookieRequest request, {String? season}) async {
+    String url = '$baseUrl/leagues/api/standings-page/';
+    if (season != null) url += '?season=$season';
+
+    try {
+      final response = await request.get(url);
+      return response; 
+    } catch (e) {
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchMatchesPage(CookieRequest request, {String tab = "all", String query = ""}) async {
+    // Encode query parameters
+    final queryParams = {
+      'tab': tab,
+      'q': query,
+    };
+    final uri = Uri.parse('$baseUrl/leagues/api/matches-page/').replace(queryParameters: queryParams);
+
+    try {
+      final response = await request.get(uri.toString());
+      return response; 
+    } catch (e) {
+      print("Error fetching matches page: $e");
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchMatchDetail(CookieRequest request, int matchId) async {
+    // URL ini sekarang sudah valid di Django Anda
+    final String url = '$baseUrl/leagues/api/matches/$matchId/';
+    
+    try {
+      final response = await request.get(url);
+      // PBP Django Auth otomatis mengembalikan Map jika content-type JSON
+      return response as Map<String, dynamic>; 
+    } catch (e) {
+      print("Error fetching match detail: $e");
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchTeamsPage(CookieRequest request, {String query = ""}) async {
+    // Encode query parameters
+    final queryParams = {'q': query};
+    final uri = Uri.parse('$baseUrl/leagues/api/teams-page/').replace(queryParameters: queryParams);
+
+    try {
+      final response = await request.get(uri.toString());
+      return response; 
+    } catch (e) {
+      print("Error fetching teams page: $e");
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
   Future<List<Team>> fetchTeams(CookieRequest request) async {
     return _fetchData<Team>(
       request: request,

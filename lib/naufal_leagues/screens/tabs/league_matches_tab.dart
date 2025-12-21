@@ -1,13 +1,15 @@
+import 'dart:async';
+import 'dart:ui'; 
 import 'package:flutter/material.dart';
-import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:intl/intl.dart';
 
-import 'package:arena_invicta_mobile/main.dart'; // UserProvider
-import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/models/match.dart';
+import 'package:arena_invicta_mobile/main.dart'; // Import UserProvider
 import 'package:arena_invicta_mobile/naufal_leagues/services/league_service.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/screens/match_form_page.dart';
+import 'package:arena_invicta_mobile/global/widgets/app_colors.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/screens/match_detail_page.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/screens/match_form_page.dart'; // Import Form
 
 class LeagueMatchesTab extends StatefulWidget {
   const LeagueMatchesTab({super.key});
@@ -17,81 +19,158 @@ class LeagueMatchesTab extends StatefulWidget {
 }
 
 class _LeagueMatchesTabState extends State<LeagueMatchesTab> {
-  // State Data
-  List<Match> _allMatches = [];
-  List<Match> _filteredMatches = [];
+  final LeagueService _service = LeagueService();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   bool _isLoading = true;
+  List<dynamic> _allMatches = []; 
+  List<dynamic> _filteredMatches = []; 
   
-  // State Filter & Search
-  int _filterIndex = 0; // 0=Semua, 1=Terjadwal, 2=Selesai
+  String _activeTab = "all"; 
   String _searchQuery = "";
-  final Map<int, String> _teamNameMap = {}; 
+  DateTime? _startDate;
+  DateTime? _endDate;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchMatches();
+    });
   }
 
-  Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
-    final request = context.read<CookieRequest>();
-    try {
-      // 1. Ambil Data Tim (mapping nama)
-      final teams = await LeagueService().fetchTeams(request);
-      _teamNameMap.clear();
-      for (var t in teams) {
-        _teamNameMap[t.pk] = t.fields.name;
-      }
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
 
-      // 2. Ambil Data Matches
-      final matches = await LeagueService().fetchMatches(request);
-      
-      if (mounted) {
-        setState(() {
-          _allMatches = matches;
-          _applyFilter(); // Filter data yang baru masuk
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+  Future<void> _fetchMatches() async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; _errorMessage = null; });
+    
+    final request = context.read<CookieRequest>();
+    final response = await _service.fetchMatchesPage(request, tab: _activeTab, query: _searchQuery);
+
+    if (!mounted) return;
+    if (response['status'] == 'success') {
+      setState(() {
+        _allMatches = response['matches'];
+        _applyLocalFilters(); 
+        _isLoading = false; 
+      });
+    } else {
+      setState(() { _errorMessage = response['message'] ?? "Error."; _isLoading = false; });
     }
   }
 
-  // --- LOGIKA FILTER GABUNGAN (STATUS + SEARCH) ---
-  void _applyFilter() {
-    setState(() {
-      _filteredMatches = _allMatches.where((match) {
-        // 1. Cek Status
-        bool statusPass = true;
-        if (_filterIndex == 1) { // Terjadwal
-          statusPass = match.fields.status != "FINISHED";
-        } else if (_filterIndex == 2) { // Selesai
-          statusPass = match.fields.status == "FINISHED";
-        }
+  void _applyLocalFilters() {
+    List<dynamic> temp = List.from(_allMatches);
 
-        // 2. Cek Search Query (Nama Home ATAU Away)
-        bool searchPass = true;
-        if (_searchQuery.isNotEmpty) {
-          final homeName = _teamNameMap[match.fields.homeTeam] ?? "";
-          final awayName = _teamNameMap[match.fields.awayTeam] ?? "";
-          final query = _searchQuery.toLowerCase();
-          
-          searchPass = homeName.toLowerCase().contains(query) || 
-                       awayName.toLowerCase().contains(query);
-        }
-
-        return statusPass && searchPass;
+    if (_startDate != null) {
+      temp = temp.where((m) {
+        DateTime mDate = DateTime.parse(m['date']);
+        return mDate.isAfter(_startDate!.subtract(const Duration(seconds: 1))); 
       }).toList();
+    }
+
+    if (_endDate != null) {
+      temp = temp.where((m) {
+        DateTime mDate = DateTime.parse(m['date']);
+        DateTime endOfDay = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59);
+        return mDate.isBefore(endOfDay);
+      }).toList();
+    }
+
+    setState(() {
+      _filteredMatches = temp;
     });
   }
 
-  void _onFilterChanged(int index) {
-    setState(() {
-      _filterIndex = index;
-      _applyFilter();
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() { _searchQuery = value; });
+      _fetchMatches();
     });
+  }
+
+  void _onTabChanged(String tab) {
+    if (_activeTab != tab) {
+      setState(() { _activeTab = tab; });
+      _fetchMatches();
+    }
+  }
+
+  Future<void> _selectDate(bool isStart) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isStart ? (_startDate ?? DateTime.now()) : (_endDate ?? DateTime.now()),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: ArenaColor.dragonFruit,
+              onPrimary: Colors.white,
+              surface: Color(0xFF2A1B54),
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: const Color(0xFF1E123B),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        if (isStart) _startDate = picked;
+        else _endDate = picked;
+      });
+      _applyLocalFilters(); 
+    }
+  }
+
+  void _clearDateFilters() {
+    setState(() {
+      _startDate = null;
+      _endDate = null;
+    });
+    _applyLocalFilters();
+  }
+
+  // --- LOGIKA HAPUS MATCH ---
+  void _confirmDelete(int matchId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF2A1B54),
+        title: const Text("Hapus Pertandingan?", style: TextStyle(color: Colors.white)),
+        content: const Text("Tindakan ini tidak dapat dibatalkan.", style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(child: const Text("Batal"), onPressed: () => Navigator.pop(ctx)),
+          TextButton(
+            child: const Text("Hapus", style: TextStyle(color: Colors.redAccent)), 
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final req = context.read<CookieRequest>();
+              final res = await _service.deleteMatch(req, matchId);
+              if (res['status'] == 'success') {
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Berhasil dihapus")));
+                _fetchMatches();
+              } else {
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+              }
+            }
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -102,248 +181,227 @@ class _LeagueMatchesTabState extends State<LeagueMatchesTab> {
 
     return Column(
       children: [
-        // --- 1. SEARCH BAR ---
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-          child: TextField(
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: "Cari klub ...",
-              hintStyle: const TextStyle(color: Colors.white54),
-              prefixIcon: const Icon(Icons.search, color: Colors.white54),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.1),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            onChanged: (value) {
-              _searchQuery = value;
-              _applyFilter();
-            },
-          ),
-        ),
-
-        // --- 2. FILTER CHIPS ---
+        // --- FILTER SECTION (Sama seperti sebelumnya) ---
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
             children: [
-              _buildFilterChip("Semua", 0),
-              const SizedBox(width: 8),
-              _buildFilterChip("Terjadwal", 1),
-              const SizedBox(width: 8),
-              _buildFilterChip("Selesai", 2),
+              // Search Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A1B54).withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      cursorColor: ArenaColor.dragonFruit,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.black.withOpacity(0.3), 
+                        hintText: "Search team...",
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+                        prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.4), size: 22),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Date Filters
+              Row(
+                children: [
+                  Expanded(child: _buildDatePickerButton(label: _startDate == null ? "Start Date" : DateFormat('d MMM').format(_startDate!), icon: Icons.calendar_today_rounded, isActive: _startDate != null, onTap: () => _selectDate(true))),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildDatePickerButton(label: _endDate == null ? "End Date" : DateFormat('d MMM').format(_endDate!), icon: Icons.event_rounded, isActive: _endDate != null, onTap: () => _selectDate(false))),
+                  if (_startDate != null || _endDate != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: InkWell(
+                        onTap: _clearDateFilters,
+                        child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.close, color: Colors.redAccent, size: 20)),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              // Tabs
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildFilterPill("All Matches", "all", ArenaColor.purpleX11),
+                    const SizedBox(width: 8),
+                    _buildFilterPill("Finished", "finished", ArenaColor.dragonFruit),
+                    const SizedBox(width: 8),
+                    _buildFilterPill("Upcoming", "upcoming", Colors.greenAccent.shade700),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
 
-        // --- 3. LIST MATCHES ---
+        // --- MATCH LIST ---
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit))
-              : _filteredMatches.isEmpty
-                  ? RefreshIndicator(
-                      onRefresh: _fetchData,
-                      child: ListView(
-                        children: [
-                          const SizedBox(height: 80),
-                          Center(
-                            child: Column(
-                              children: [
-                                const Icon(Icons.search_off, size: 50, color: Colors.white24),
-                                const SizedBox(height: 10),
-                                Text(
-                                  _allMatches.isEmpty ? "Belum ada data." : "Pertandingan tidak ditemukan.", 
-                                  style: const TextStyle(color: Colors.white54)
-                                ),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _fetchData,
-                      color: ArenaColor.dragonFruit,
-                      backgroundColor: const Color(0xFF2A2045),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                        itemCount: _filteredMatches.length,
-                        itemBuilder: (context, index) {
-                          final match = _filteredMatches[index];
-                          final homeName = _teamNameMap[match.fields.homeTeam] ?? "Team ${match.fields.homeTeam}";
-                          final awayName = _teamNameMap[match.fields.awayTeam] ?? "Team ${match.fields.awayTeam}";
-                          final dateStr = DateFormat('dd MMM, HH:mm').format(match.fields.date);
-                          final isFinished = match.fields.status == "FINISHED";
-
-                          return Card(
-                            color: Colors.white.withOpacity(0.05),
-                            margin: const EdgeInsets.only(bottom: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
-                              onTap: isAdmin ? () => _showAdminOptions(context, match) : null,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  children: [
-                                    // Header: Tanggal & Label Status
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          dateStr,
-                                          style: const TextStyle(color: Colors.white54, fontSize: 12),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: isFinished ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(4)
-                                          ),
-                                          child: Text(
-                                            isFinished ? "FT" : "Upcoming",
-                                            style: TextStyle(
-                                              color: isFinished ? Colors.greenAccent : Colors.orangeAccent, 
-                                              fontSize: 10, 
-                                              fontWeight: FontWeight.bold
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    
-                                    // Body: Home vs Away
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            homeName, 
-                                            textAlign: TextAlign.right, 
-                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)
-                                          ),
-                                        ),
-                                        Container(
-                                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF2A2045), 
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.white10)
-                                          ),
-                                          child: Text(
-                                            isFinished ? "${match.fields.homeScore} - ${match.fields.awayScore}" : "VS",
-                                            style: TextStyle(
-                                              color: isFinished ? ArenaColor.dragonFruit : Colors.white70, 
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            awayName, 
-                                            textAlign: TextAlign.left, 
-                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+            ? const Center(child: CircularProgressIndicator(color: ArenaColor.dragonFruit))
+            : _filteredMatches.isEmpty
+                ? const Center(child: Text("No matches found.", style: TextStyle(color: Colors.white54)))
+                : ListView.builder(
+                    padding: const EdgeInsets.only(top: 0, bottom: 100, left: 16, right: 16),
+                    itemCount: _filteredMatches.length,
+                    itemBuilder: (context, index) => _buildMatchCard(_filteredMatches[index], isAdmin),
+                  ),
         ),
       ],
     );
   }
 
-  // Widget Helper Filter Chip
-  Widget _buildFilterChip(String label, int index) {
-    final bool isSelected = _filterIndex == index;
+  // --- WIDGET HELPER ---
+
+  Widget _buildDatePickerButton({required String label, required IconData icon, required bool isActive, required VoidCallback onTap}) {
     return GestureDetector(
-      onTap: () => _onFilterChanged(index),
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? ArenaColor.dragonFruit : Colors.white.withOpacity(0.1),
+          color: isActive ? ArenaColor.dragonFruit.withOpacity(0.2) : const Color(0xFF2A1B54).withOpacity(0.4),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: isActive ? ArenaColor.dragonFruit : Colors.white.withOpacity(0.1)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: isActive ? Colors.white : Colors.white60),
+            const SizedBox(width: 8),
+            Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.white60, fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterPill(String label, String value, Color activeColor) {
+    bool isActive = _activeTab == value;
+    return GestureDetector(
+      onTap: () => _onTabChanged(value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? activeColor : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: isActive ? activeColor : Colors.white.withOpacity(0.1)),
+        ),
+        child: Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.white60, fontWeight: isActive ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
+      ),
+    );
+  }
+
+  Widget _buildMatchCard(dynamic match, bool isAdmin) {
+    DateTime date = DateTime.parse(match['date']);
+    String dateStr = DateFormat('d MMM yyyy').format(date);
+    String timeStr = DateFormat('HH:mm').format(date);
+    bool isFinished = match['is_finished'];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        gradient: isFinished 
+            ? LinearGradient(colors: [const Color(0xFF1E123B).withOpacity(0.9), const Color(0xFF0F0821).withOpacity(0.9)])
+            : LinearGradient(colors: [ArenaColor.purpleX11.withOpacity(0.15), ArenaColor.darkAmethyst.withOpacity(0.15)]),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isFinished ? Colors.white.withOpacity(0.1) : ArenaColor.purpleX11.withOpacity(0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? ArenaColor.dragonFruit : Colors.transparent
-          )
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12
+          onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => MatchDetailPage(matchId: match['id'])));
+          }, 
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white38),
+                            const SizedBox(width: 6),
+                            Text("$dateStr • $timeStr", style: const TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'monospace')),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isFinished ? Colors.white.withOpacity(0.1) : ArenaColor.dragonFruit.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(isFinished ? "FT" : "UPCOMING", style: TextStyle(color: isFinished ? Colors.white70 : ArenaColor.dragonFruit, fontSize: 10, fontWeight: FontWeight.bold)),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(child: Text(match['home_team'], textAlign: TextAlign.right, style: TextStyle(color: isFinished ? Colors.white : Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold, fontSize: 15))),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: EdgeInsets.symmetric(horizontal: isFinished ? 16 : 12, vertical: 8),
+                          decoration: BoxDecoration(color: const Color(0xFF1A103C), borderRadius: BorderRadius.circular(10)),
+                          child: Text(isFinished ? "${match['home_score']} - ${match['away_score']}" : "VS", style: TextStyle(color: isFinished ? Colors.white : Colors.white38, fontWeight: FontWeight.w900, fontSize: 18)),
+                        ),
+                        Expanded(child: Text(match['away_team'], textAlign: TextAlign.left, style: TextStyle(color: isFinished ? Colors.white : Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold, fontSize: 15))),
+                      ],
+                    ),
+                  ],
+                ),
+                
+                // --- ADMIN EDIT BUTTON ---
+                if (isAdmin)
+                  Positioned(
+                    top: -10,
+                    right: 40, // Geser sedikit agar tidak menumpuk status
+                    child: PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5)),
+                      color: const Color(0xFF2A1B54),
+                      onSelected: (val) async {
+                        if (val == 'edit') {
+                          // Buka Form Edit dengan data Map
+                          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => MatchFormPage(matchData: match)));
+                          if (res == true) _fetchMatches();
+                        } else if (val == 'delete') {
+                          _confirmDelete(match['id']);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Text("Edit", style: TextStyle(color: Colors.white))),
+                        const PopupMenuItem(value: 'delete', child: Text("Hapus", style: TextStyle(color: Colors.redAccent))),
+                      ],
+                    ),
+                  )
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  // Admin Options
-  void _showAdminOptions(BuildContext context, Match match) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF2A2045),
-        title: const Text("Opsi Admin", style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(
-            child: const Text("Update Skor / Edit", style: TextStyle(color: Colors.blueAccent)),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final res = await Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (_) => MatchFormPage(match: match))
-              );
-              if (res == true) _fetchData();
-            },
-          ),
-          TextButton(
-            child: const Text("Hapus Jadwal", style: TextStyle(color: Colors.redAccent)),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              _confirmDelete(context, match);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDelete(BuildContext context, Match match) {
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: const Color(0xFF2A2045),
-        title: const Text("Hapus Jadwal?", style: TextStyle(color: Colors.white)),
-        content: const Text("Data ini akan dihapus permanen.", style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: ()=>Navigator.pop(c), child: const Text("Batal")),
-          TextButton(
-            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
-            onPressed: () async {
-              Navigator.pop(c);
-              final req = context.read<CookieRequest>();
-              await LeagueService().deleteMatch(req, match.pk);
-              _fetchData();
-            },
-          ),
-        ],
-      )
     );
   }
 }

@@ -6,7 +6,7 @@ import 'package:arena_invicta_mobile/main.dart';
 import 'package:arena_invicta_mobile/adam_discussions/screens/discussions_page.dart';
 import 'package:arena_invicta_mobile/hannan_quiz/screens/quiz_main.dart';
 import 'package:arena_invicta_mobile/rafa_news/screens/news_entry_list.dart';
-import 'package:arena_invicta_mobile/naufal_leagues/screens/league_dashboard_page.dart';
+import 'package:arena_invicta_mobile/naufal_leagues/screens/leagues_page.dart';
 
 enum NavbarItem { news, quiz, discussions, league, profile }
 
@@ -101,39 +101,14 @@ class GlassyNavbar extends StatelessWidget {
 
                 const SizedBox(width: 60), // Spacer Tengah
 
-                // IconButton(
-                //   tooltip: "League",
-                //   onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                //     const SnackBar(content: Text("League Coming Soon!")),
-                //   ),
-                //   icon: Icon(Icons.emoji_events_rounded, color: _navColor(NavbarItem.league)),
-                // ),
-                // IconButton(
-                //   tooltip: "League",
-                //   // UBAH DARI SNACKBAR MENJADI NAVIGASI KE LEAGUESPAGE
-                //   onPressed: () => _navigate(context, const LeaguesPage()), 
-                //   icon: Icon(Icons.emoji_events_rounded, color: _navColor(NavbarItem.league)),
-                // ),
-                // IconButton(
-                //   icon: const Icon(Icons.emoji_events_outlined, color: Colors.white), // Atau icon sejenis
-                //   onPressed: () {
-                //     // --- UBAH BAGIAN INI ---
-                //     // Arahkan ke Dashboard Liga yang baru (yang punya 4 tab)
-                //     Navigator.pushNamed(context, '/leagues'); 
-                //   },
-                // ),
                 IconButton(
                   tooltip: "League",
-                  // Pastikan ikonnya sesuai (Piala)
                   icon: Icon(Icons.emoji_events_rounded, color: _navColor(NavbarItem.league)), 
                   
-                  // Arahkan ke LeagueDashboardPage (Halaman dengan 4 Tab)
+                  // PERBAIKAN: Arahkan ke LeaguesPage() (Halaman Baru)
+                  // JANGAN gunakan LeagueDashboardPage() (Halaman Lama)
                   onPressed: () {
-                      // Jika Anda menggunakan fungsi helper _navigate milik Anda:
-                      _navigate(context, const LeagueDashboardPage());
-                      
-                      // ATAU jika error, gunakan cara standar Flutter:
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => const LeagueDashboardPage()));
+                      _navigate(context, const LeaguesPage());
                   }, 
                 ),
 
