@@ -8,6 +8,9 @@ i. Nama-nama Anggota Kelompok:
 
 ii. Deskripsi Aplikasi (Cerita & Manfaat Aplikasi)
 ### Arena Invicta Mobile
+Video Aplikasi:
+https://drive.google.com/file/d/1ehgPhRRHYeKnIBP7NxhFZ4UgHbHI2ZBX/view?usp=drivesdk
+
 [Link Download Aplikasi Arena Invicta via Bitrise](https://app.bitrise.io/app/7998e549-74b1-4353-bce0-e212279f2fbf/installable-artifacts/d2b6e234a093074c/public-install-page/54c0a137db2b22ac6be1fe4736fd69b4)
 
 [![Build Status](https://app.bitrise.io/app/7998e549-74b1-4353-bce0-e212279f2fbf/status.svg?token=uucFNi8cOKwwTHuej_zQEA&branch=main)](https://app.bitrise.io/app/7998e549-74b1-4353-bce0-e212279f2fbf)
